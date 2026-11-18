@@ -1,0 +1,68 @@
+<div id="ff-login" class="ff-login" hidden>
+  <form id="ff-form" class="ff-box">
+    <img id="ff-logo" alt="Fenice Film">
+    <h2>Fenice Film</h2>
+    <p>App operativa. Scrivi il tuo nome e la password che ti ha dato Roberta.</p>
+    <label>Il tuo nome<input id="ff-name" type="text" autocomplete="name" required maxlength="40"></label>
+    <label>Password<input id="ff-pass" type="password" autocomplete="current-password" required></label>
+    <button class="btn primary" type="submit" id="ff-go">Entra</button>
+    <span id="ff-err" class="ff-err" role="alert"></span>
+  </form>
+</div>
+<style>
+.ff-login{position:fixed;inset:0;z-index:50;background:var(--pellicola);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px))}
+.ff-box{background:var(--surface);color:var(--ink);border-radius:18px;padding:24px 20px;width:min(100%,380px);display:grid;gap:12px}
+.ff-box img{width:64px;height:auto}
+.ff-box h2{font-size:2rem}
+.ff-box p{font-size:.9rem;color:var(--muted)}
+.ff-box label{display:grid;gap:4px;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ff-box input{font-size:16px;padding:12px}
+.ff-box .btn{min-height:48px;font-size:1rem;justify-content:center}
+.ff-err{color:var(--bad);font-size:.85rem;font-weight:600;min-height:1em}
+.ff-out{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.75rem;text-decoration:underline;cursor:pointer;padding:6px 0}
+</style>
+<script>
+(function(){
+const TK='ff-token',NM='ff-name',RL='ff-role';
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+let token=ls.get(TK),role=ls.get(RL),data=null,v=null,started=false;const listeners={};
+let ready;const readyP=new Promise(r=>ready=r);
+function snap(c){const m=(data&&data[c])||{};const docs=Object.entries(m).map(([id,d])=>({id,exists:true,data:()=>d,metadata:{fromCache:false,hasPendingWrites:false}}));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>[],metadata:{fromCache:false,hasPendingWrites:false}}}
+function emitAll(){Object.keys(listeners).forEach(c=>listeners[c].forEach(fn=>{try{fn(snap(c))}catch(e){console.error(e)}}))}
+async function api(path,opt){opt=opt||{};const r=await fetch('/api'+path,Object.assign({},opt,{headers:Object.assign({'content-type':'application/json'},token?{authorization:'Bearer '+token}:{})}));
+  let j={};try{j=await r.json()}catch(e){}
+  if(r.status===401&&path!=='/login'){logout();throw{code:'not_granted',message:j.error||''}}
+  if(!r.ok)throw{code:j.code||(r.status===403?'invalid_argument':'unavailable'),status:r.status,message:j.error||'Errore'};return j}
+async function poll(){try{const j=await api('/state'+(v?'?since='+v:''));if(j.role&&j.role!==role){role=j.role;ls.set(RL,role)}if(!j.unchanged){v=j.v;data=j.data;emitAll()}}catch(e){}}
+async function write(ops){const j=await api('/write',{method:'POST',body:JSON.stringify({ops})});data=data||{};
+  ops.forEach((o,i)=>{const c=o.collection,id=j.results[i].id;data[c]=data[c]||{};if(o.op==='delete')delete data[c][id];else if(o.op==='update')data[c][id]=Object.assign({},data[c][id],o.data);else data[c][id]=o.data});
+  v=j.v;emitAll();return j}
+const db={collection(c){return{path:c,onSnapshot(fn){(listeners[c]=listeners[c]||[]).push(fn);if(data)setTimeout(()=>fn(snap(c)));return()=>{listeners[c]=listeners[c].filter(f=>f!==fn)}},doc(id){return db.doc(c+'/'+id)},async add(d){const j=await write([{op:'add',collection:c,data:d}]);return db.doc(c+'/'+j.results[0].id)}}},
+  doc(p){const [c,id]=p.split('/');return{id,path:p,set:d=>write([{op:'set',collection:c,id,data:d}]).then(()=>{}),update:d=>write([{op:'update',collection:c,id,data:d}]).then(()=>{}),delete:()=>write([{op:'delete',collection:c,id}]).then(()=>{}),get:async()=>{const d=data&&data[c]&&data[c][id];return{id,exists:!!d,data:()=>d,metadata:{}}}}}};
+const uid=()=>ls.get(NM)?'n:'+ls.get(NM):null;
+const user={id:async()=>uid(),me:async()=>({id:uid(),name:ls.get(NM)||'',email:null}),isOwner:async()=>role==='t',canEdit:async()=>role==='t',can:async()=>role==='t',
+  profiles:async ids=>Object.fromEntries((ids||[]).map(i=>[i,{id:i,name:String(i).startsWith('n:')?String(i).slice(2):'',avatarUrl:null,guest:false}]))};
+/* Calendario: stesso formato del connettore Google Calendar, letto dal server */
+async function calFetch(input){const from=String(input.startTime||'').slice(0,10),to=String(input.endTime||'').slice(0,10);
+  const j=await api('/calendar?from='+from+'&to='+to);return{content:[],payload:{events:j.events||[]}}}
+const mcp={watchTool(server,tool,input,handler,opts){let stop=false;
+  const run=()=>calFetch(input).then(r=>{if(!stop)handler({type:'data',result:r})},e=>{if(!stop)handler({type:'error',error:{code:e.code||'upstream_error',message:e.message}})});
+  setTimeout(run);const every=Math.max(60000,(opts&&opts.refetchInterval)||300000);const t=setInterval(()=>{if(!document.hidden)run()},every);
+  return()=>{stop=true;clearInterval(t)}},
+  callTool:(server,tool,input)=>calFetch(input),listTools:async()=>({servers:[{server:'Google Calendar',authStatus:'connected',tools:[{name:'list_events',description:''}]}]})};
+window.claude={use:async n=>{await readyP;return n==='db'?db:n==='user'?user:n==='mcp'?mcp:null}};
+function start(){if(started)return;started=true;$l().hidden=true;poll().then(()=>ready());setInterval(poll,8000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});addLogout()}
+function logout(){ls.del(TK);ls.del(RL);token=null;role=null;showLogin('Accesso scaduto: inserisci di nuovo la password.')}
+function addLogout(){const f=document.getElementById('foot');if(!f||document.getElementById('ff-out'))return;const b=document.createElement('button');b.id='ff-out';b.className='ff-out';b.type='button';b.textContent='Esci dall\'app';
+  b.addEventListener('click',()=>{ls.del(TK);ls.del(RL);location.reload()});f.after(b)}
+const $l=()=>document.getElementById('ff-login');
+function showLogin(msg){const el=$l();el.hidden=false;document.getElementById('ff-err').textContent=msg||'';const n=document.getElementById('ff-name');if(!n.value)n.value=ls.get(NM)||'';
+  const lg=document.querySelector('.bar img');if(lg)document.getElementById('ff-logo').src=lg.src}
+document.getElementById('ff-form').addEventListener('submit',async e=>{e.preventDefault();const b=document.getElementById('ff-go');b.disabled=true;document.getElementById('ff-err').textContent='';
+  try{const name=document.getElementById('ff-name').value.trim();const j=await api('/login',{method:'POST',body:JSON.stringify({password:document.getElementById('ff-pass').value})});
+    const changed=role&&role!==j.role;token=j.token;role=j.role;ls.set(TK,token);ls.set(RL,role);ls.set(NM,name);document.getElementById('ff-pass').value='';
+    if(started){if(changed)location.reload();else{$l().hidden=true;poll()}}else start()}
+  catch(err){document.getElementById('ff-err').textContent=err.message||'Accesso non riuscito'}finally{b.disabled=false}});
+if(token&&role&&ls.get(NM))start();else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>showLogin());else showLogin();
+})();
+</script>
