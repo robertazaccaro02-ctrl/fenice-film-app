@@ -14,7 +14,7 @@ R("Apri l'app da claude.ai con il tuo account per vedere e modificare i dati.", 
 R("Apri l\\'app da claude.ai con il tuo account.", "Ricarica la pagina e inserisci la password.")
 R("Il calendario si vede quando apri l\\'app dentro claude.ai con Google Calendar collegato.", "Calendario non disponibile in questo momento.")
 R("const calErrMsg=code=>({",
-  "const calErrMsg=code=>({\n  not_configured:['warn','<b>Il calendario non è ancora collegato.</b> Manca l\\'indirizzo iCal segreto nelle impostazioni di Netlify (GCAL_ICS_URL).'],\n  unavailable:['info','Google Calendar non risponde in questo momento. Riprovo da solo tra poco.'],")
+  "const calErrMsg=code=>({\n  not_configured:['warn','<b>Il calendario non è ancora collegato.</b> Manca l\\'indirizzo iCal segreto nelle impostazioni di Cloudflare (GCAL_ICS_URL).'],\n  unavailable:['info','Google Calendar non risponde in questo momento. Riprovo da solo tra poco.'],")
 R("Vedi tutto come titolare: clienti, tariffe e documenti riservati sono visibili solo a te e al tuo socio.",
   "Sei entrato con la password dei titolari: clienti, tariffe e documenti riservati li vedete solo voi.")
 

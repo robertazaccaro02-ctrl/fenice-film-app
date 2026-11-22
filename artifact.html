@@ -231,7 +231,7 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
 
   <div class="grid2">
     <div class="panel">
-      <div class="phead"><span class="label">Prossimi 7 giorni</span><a href="#calendario" class="muted" style="font-size:.8rem">Calendario completo ›</a></div>
+      <div class="phead"><span class="label">Oggi e domani</span><a href="#calendario" class="muted" style="font-size:.8rem">Calendario completo ›</a></div>
       <div id="home-cal"><p class="status">Carico il calendario FENICE FILM…</p></div>
     </div>
     <div class="panel">
@@ -513,9 +513,9 @@ function renderHomeCal(){
   const n=calNotice('week');const list=S.cal.week;
   if(!list){el.innerHTML=n||'<p class="status">Carico il calendario FENICE FILM…</p>';return}
   const t=todayKey();let html='';
-  for(let i=0;i<7;i++){const k=addDays(t,i);const evs=eventsOn(list,k);const ed=editsOn(list,k);if(!evs.length&&!ed.length)continue;
-    html+=`<li><div class="dbox ${i===0?'today':''}"><b class="num">${+k.slice(8)}</b><span>${i===0?'oggi':esc(wd(k))}</span></div><div class="evs">${evs.map(evRow).join('')}${editsHtml(ed)}</div></li>`}
-  el.innerHTML=n+(html?`<ul class="agenda">${html}</ul>`:'<div class="empty"><b>Settimana libera</b><span>Nessun appuntamento nei prossimi 7 giorni sul calendario FENICE FILM.</span></div>')}
+  for(let i=0;i<2;i++){const k=addDays(t,i);const evs=eventsOn(list,k);const ed=editsOn(list,k);
+    html+=`<li><div class="dbox ${i===0?'today':''}"><b class="num">${+k.slice(8)}</b><span>${i===0?'oggi':'domani'}</span></div><div class="evs">${evs.map(evRow).join('')}${editsHtml(ed)}${!evs.length&&!ed.length?'<p class="muted" style="margin:0;font-size:.85rem">Niente in calendario.</p>':''}</div></li>`}
+  el.innerHTML=n+`<ul class="agenda">${html}</ul>`}
 function evRow(e){const t=e.allDay?'<time>tutto il giorno</time>':`<time>${esc(e.time)}</time>`;
   const title=e.link?`<a href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.title)}</a>`:`<span style="font-weight:600">${esc(e.title)}</span>`;
   const sub=[e.loc,e.desc].filter(Boolean).map(esc).join(' · ');

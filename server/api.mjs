@@ -1,11 +1,10 @@
 // API dell'app Fenice Film: accesso con due password (titolari / collaboratori),
-// dati condivisi su Netlify Blobs, calendario FENICE FILM letto dall'indirizzo iCal segreto di Google.
-import { getStore } from "@netlify/blobs";
+// dati condivisi (archivio passato da chi ospita l'app), calendario FENICE FILM letto dall'indirizzo iCal segreto di Google.
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
-import seed from "../../data/seed.json" with { type: "json" };
-import updates from "../../data/updates.json" with { type: "json" };
-import { eventsBetween } from "../lib/ics.mjs";
-import propostaBase from "../../data/proposte.mjs";
+import { Buffer } from "node:buffer";
+import seed from "../data/seed.json" with { type: "json" };
+import updates from "../data/updates.json" with { type: "json" };
+import { eventsBetween } from "./ics.mjs";
 
 const COLLECTIONS = ["produzioni", "clienti", "collaboratori", "fornitori", "documenti", "documenti_riservati", "tariffe", "todo", "assenze", "app_esterne"];
 // Visibili solo ai titolari
@@ -15,18 +14,16 @@ const OPEN_WRITE = new Set(["todo", "assenze"]);
 const TOKEN_DAYS = 30;
 const MAX_DOC = 64 * 1024;
 
-let testStore = null, testFetch = null;
-export function __setTestStore(s) { testStore = s; }
-export function __setTestFetch(f) { testFetch = f; }
-const store = () => testStore || getStore({ name: "fenice-film", consistency: "strong" });
+// Impostazioni lette a ogni richiesta (variabili/segreti di Cloudflare o del server di prova)
+let ENV = {}, FETCH = null;
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 
-const PW_T = () => process.env.PASSWORD_TITOLARI || "";
-const PW_C = () => process.env.PASSWORD_COLLABORATORI || "";
+const PW_T = () => ENV.PASSWORD_TITOLARI || "";
+const PW_C = () => ENV.PASSWORD_COLLABORATORI || "";
 function secret() {
-  return process.env.APP_SECRET || createHmac("sha256", "fenice-film").update(PW_T() + "|" + PW_C()).digest("hex");
+  return ENV.APP_SECRET || createHmac("sha256", "fenice-film").update(PW_T() + "|" + PW_C()).digest("hex");
 }
 function sign(payload) { return createHmac("sha256", secret()).update("v1." + payload).digest("hex"); }
 function makeToken(role) { const exp = Date.now() + TOKEN_DAYS * 864e5; const p = exp + "." + role; return p + "." + sign(p); }
@@ -71,6 +68,10 @@ async function applyUpdates(st) {
 async function readAll(st, role) {
   const cols = COLLECTIONS.filter((c) => role === "t" || !PRIVATE.has(c));
   const out = Object.fromEntries(cols.map((c) => [c, {}]));
+  if (st.getAllJSON) {
+    for (const [key, d] of Object.entries(await st.getAllJSON("d/"))) { const [, c, id] = key.split("/"); if (out[c] && d) out[c][id] = d; }
+    return out;
+  }
   const { blobs } = await st.list({ prefix: "d/" });
   await Promise.all(blobs.map(async ({ key }) => {
     const [, c, id] = key.split("/");
@@ -85,19 +86,22 @@ const bump = async (st) => { const v = Date.now(); await st.setJSON("_v", { v })
 // Calendario: scarica l'iCal al massimo ogni 2 minuti
 let icsCache = { at: 0, text: null };
 async function loadIcs() {
-  const url = process.env.GCAL_ICS_URL;
+  const url = ENV.GCAL_ICS_URL;
   if (!url) return null;
   if (icsCache.text && Date.now() - icsCache.at < 120000) return icsCache.text;
-  const r = await (testFetch || fetch)(url, { headers: { "user-agent": "fenice-film-app" } });
+  const r = await (FETCH || fetch)(url, { headers: { "user-agent": "fenice-film-app" } });
   if (!r.ok) throw new Error("ics " + r.status);
   icsCache = { at: Date.now(), text: await r.text() };
   return icsCache.text;
 }
 
-export default async (req) => {
+// ctx: { env, store, baseProposal: () => Promise<string>, fetch? }
+// store: get(key, {type:"json"}?), set, setJSON, delete, list({prefix}) -> {blobs:[{key}]}
+export async function handle(req, ctx) {
+  ENV = ctx.env || {}; FETCH = ctx.fetch || null;
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/(\.netlify\/functions\/api|api)/, "") || "/";
-  if (!PW_T() || !PW_C()) return json({ error: "Password non configurate su Netlify (PASSWORD_TITOLARI e PASSWORD_COLLABORATORI)." }, 500);
+  const path = url.pathname.replace(/^\/api/, "") || "/";
+  if (!PW_T() || !PW_C()) return json({ error: "Password non configurate (PASSWORD_TITOLARI e PASSWORD_COLLABORATORI nelle impostazioni)." }, 500);
 
   if (path === "/login" && req.method === "POST") {
     let body = {};
@@ -124,14 +128,14 @@ export default async (req) => {
     return json({ events: eventsBetween(text, from, to) });
   }
 
-  const st = store();
+  const st = ctx.store;
 
   // Proposte di partnership: solo titolari
   if (path === "/proposta") {
     if (role !== "t") return json({ error: "Solo i titolari possono aprire le proposte" }, 403);
     if (req.method === "GET") {
       const saved = await st.get("proposte/partnership");
-      return new Response(saved || propostaBase, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "private, no-store" } });
+      return new Response(saved || (await ctx.baseProposal()), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "private, no-store" } });
     }
     if (req.method === "POST") {
       const html = await req.text();
@@ -179,6 +183,4 @@ export default async (req) => {
   }
 
   return json({ error: "Non trovato" }, 404);
-};
-
-export const config = { path: "/api/*" };
+}
