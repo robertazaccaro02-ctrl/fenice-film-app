@@ -147,6 +147,12 @@ button.card:hover{border-color:var(--oro)}
 .x{border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:6px}
 .addrow{display:grid;grid-template-columns:1fr auto;gap:8px}
 .addrow .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pgroup{display:grid;gap:4px}.pgroup>h3{margin:0;font-size:1.05rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pgroup>h3 small{font-size:.78rem;color:var(--muted);font-weight:600}
+.cgroup{border-left:3px solid var(--oro);padding-left:10px;margin-top:6px}.cgroup>.label{display:block;margin-bottom:2px}
+.tt .ptag{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.02em;color:var(--gold-text);background:rgba(185,143,62,.14);border-radius:5px;padding:1px 5px;margin-right:5px;vertical-align:1px}
+.cell{position:relative}.cell .edot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:99px;background:#8e24aa}
+.edits{display:grid;gap:2px;font-size:.74rem;color:#8e24aa;font-weight:600}.edits span{display:flex;gap:6px;align-items:baseline;min-width:0;overflow-wrap:anywhere}.edits span::before{content:'';flex:none;width:7px;height:7px;border-radius:99px;background:#8e24aa;transform:translateY(-1px)}
+.edits a{color:inherit;text-decoration:none}
 
 input[type=text],input[type=date],input[type=url],input[type=tel],input[type=email],textarea,select{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:.9rem;padding:9px 11px;border-radius:10px}
 textarea{resize:vertical;min-height:70px}
@@ -191,11 +197,15 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
 .kv dd{margin:0;overflow-wrap:anywhere}
 .pw{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:1rem;background:var(--surface-2);padding:2px 10px;border-radius:8px;user-select:all}
 .abs{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--muted);border:1px dashed var(--muted);background:transparent}
-.cell .ini{margin-top:auto;font-size:.56rem;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px dashed var(--line);padding-top:2px}
+.cell .ini{margin-top:auto;font-size:.58rem;font-weight:600;line-height:1.2;color:var(--muted);overflow:hidden;border-top:1px dashed var(--line);padding-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 2px 4px;border-bottom:2px solid var(--oro);grid-column:1/-1}
+.ghead h3{font-size:1.25rem}
+.ghead span{font-size:.78rem;font-weight:700;color:var(--muted)}
+.gsub{grid-column:1/-1;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text);padding-top:6px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.74rem;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:16px;height:8px;border-radius:3px;display:inline-block}
-@media (max-width:520px){.cell .ini{font-size:.5rem}}
+@media (max-width:520px){.cell .ini{font-size:.48rem;-webkit-line-clamp:4}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--bg);font-size:.85rem;font-weight:700;padding:10px 16px;border-radius:999px;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
 </style>
@@ -225,12 +235,13 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
       <div id="home-cal"><p class="status">Carico il calendario FENICE FILM…</p></div>
     </div>
     <div class="panel">
-      <div class="phead"><span class="label">Da fare</span><span class="muted num" id="todo-count" style="font-size:.8rem"></span></div>
+      <div class="phead"><span class="label">Da fare · tutto insieme</span><span style="display:flex;gap:10px;align-items:baseline"><span class="muted num" id="todo-count" style="font-size:.8rem"></span><a href="#dafare" class="muted" style="font-size:.8rem">Per programma ›</a></span></div>
       <ul class="todo" id="todo-list"></ul>
       <form class="addrow" id="todo-form" autocomplete="off" hidden>
         <div style="display:grid;gap:8px;min-width:0">
           <input type="text" id="todo-text" placeholder="Nuova cosa da fare…" aria-label="Cosa da fare" maxlength="200">
-          <div class="two"><input type="date" id="todo-date" aria-label="Scadenza"><select id="todo-area" aria-label="Area"></select></div>
+          <div class="two"><select id="todo-prog" aria-label="Programma"></select><select id="todo-area" aria-label="Categoria"></select></div>
+          <input type="date" id="todo-date" aria-label="Scadenza">
         </div>
         <button class="btn primary" type="submit">Aggiungi</button>
       </form>
@@ -253,8 +264,10 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
   </div>
 
   <div class="tiles" id="home-tiles">
+    <a class="tile" href="#dafare"><em class="num" id="t-dafare">–</em><b>Da fare</b><span>Per programma e categoria</span></a>
+    <a class="tile" href="#proposte" data-admin><em class="num" id="t-prop">1</em><b>Proposte</b><span>Partnership per gli sponsor</span></a>
     <a class="tile" href="#clienti" data-admin><em class="num" id="t-clienti">–</em><b>Clienti e partner</b><span>Brand, sponsor, committenti</span></a>
-    <a class="tile" href="#collaboratori"><em class="num" id="t-collab">–</em><b>Collaboratori</b><span>Chi lavora con noi</span></a>
+    <a class="tile" href="#collaboratori"><em class="num" id="t-collab">–</em><b>Persone</b><span>Interno e collaboratori esterni</span></a>
     <a class="tile" href="#fornitori"><em class="num" id="t-forn">–</em><b>Fornitori</b><span>Catering, alloggi, noleggi</span></a>
     <a class="tile" href="#documenti"><em class="num" id="t-doc">–</em><b>Documenti</b><span>Archivio su MyAirBridge</span></a>
   </div>
@@ -273,7 +286,7 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
   </div>
   <div id="cal-msg"></div>
   <div class="calgrid" id="cal-grid" role="grid"></div>
-  <div class="legend"><span><i style="background:var(--oro)"></i>Appuntamenti</span><span><i style="border:1px dashed var(--muted)"></i>Chi è fuori (iniziali in fondo alla casella)</span></div>
+  <div class="legend"><span><i style="background:var(--oro)"></i>Appuntamenti</span><span><i style="border:1px dashed var(--muted)"></i>Chi è fuori (in piccolo in fondo alla casella)</span><span><i style="background:#8e24aa;width:8px;border-radius:99px"></i>Edit (pallino viola, dettagli toccando il giorno)</span></div>
   <div class="panel" id="cal-day"></div>
   <p class="muted" style="font-size:.8rem">Il calendario si legge da Google Calendar. Per aggiungere o spostare un appuntamento aprilo in Google Calendar: l'app si aggiorna da sola.</p>
 </section>
@@ -290,12 +303,40 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
   <div><span class="label">Rubrica</span><h2 id="rub-title">Collaboratori</h2></div>
   <nav class="seg" aria-label="Rubrica">
     <a href="#clienti" data-admin>Clienti e partner<small id="s-clienti"></small></a>
-    <a href="#collaboratori">Collaboratori<small id="s-collab"></small></a>
+    <a href="#collaboratori">Persone<small id="s-collab"></small></a>
     <a href="#fornitori">Fornitori<small id="s-forn"></small></a>
   </nav>
   <div class="toolbar"><input class="search" type="search" id="rub-q" placeholder="Cerca per nome, ruolo, città…" aria-label="Cerca"><button class="btn primary" id="rub-new" data-admin>+ Aggiungi</button></div>
   <div class="chips" id="rub-chips"></div>
   <div class="cards" id="rub-list"></div>
+</section>
+
+<!-- PROPOSTE (solo titolari) -->
+<section class="view" id="v-dafare" hidden>
+  <div class="phead"><div><span class="label">Fenice Film</span><h2>Da fare</h2></div><a href="#home" class="muted" style="font-size:.85rem">In Home le vedi tutte insieme ›</a></div>
+  <div class="panel">
+    <form class="addrow" id="df-form" autocomplete="off" hidden>
+      <div style="display:grid;gap:8px;min-width:0">
+        <input type="text" id="df-text" placeholder="Cosa devo fare…" aria-label="Cosa da fare" maxlength="200">
+        <div class="two"><select id="df-prog" aria-label="Programma"></select><select id="df-cat" aria-label="Categoria"></select></div>
+        <input type="date" id="df-date" aria-label="Scadenza">
+      </div>
+      <button class="btn primary" type="submit">Aggiungi</button>
+    </form>
+  </div>
+  <div class="chips" id="f-dafare"></div>
+  <div id="dafare-list" style="display:grid;gap:16px"></div>
+</section>
+
+<section class="view" id="v-proposte" hidden>
+  <div><span class="label">Solo titolari</span><h2>Proposte</h2></div>
+  <p class="muted" style="max-width:62ch">Le proposte da mandare a sponsor e brand. Si aprono a tutto schermo: puoi scrivere il nome del partner, modificare testi e foto e scaricare il PDF.</p>
+  <div class="cards">
+    <div class="card"><div class="tags"><span class="tag gold">Stagione 2026/2027</span><span class="tag">Sponsor e brand partner</span></div>
+      <span class="cname">Proposta di partnership</span>
+      <span class="cmeta">Copertina, partner, programmi, referenti. Esporta in PDF.</span>
+      <div><a class="btn primary" href="https://claude.ai/artifact/9u2gJ5Xaq2rYnfGzCc2TW1" target="_blank" rel="noopener" data-proposta="partnership">Apri la proposta ›</a></div></div>
+  </div>
 </section>
 
 <!-- DOCUMENTI -->
@@ -330,6 +371,13 @@ const CAL_ID='195b1f5a76af9ba4765d47a6861c3ff782bbd0f59f8ee15f4a2bfc3ecc85456c@g
 const TZ='Europe/Rome';
 const GCOL={"1":"#7986cb","2":"#33b679","3":"#8e24aa","4":"#e67c73","5":"#d4a017","6":"#f4511e","7":"#039be5","8":"#616161","9":"#3f51b5","10":"#0b8043","11":"#d50000"};
 const AREE=['Produzione','Partnership e sponsor','Social e comunicazione','Amministrazione'];
+/* programmi dalla proposta di partnership + produzioni dell'app */
+const PROG_BASE=['Pizza Maker','I Sapori del Sole','I Sapori del Mediterraneo','Case da Sogno'];
+const GENERALE='Generale Fenice Film';
+const CATEGORIE=['Produzione','Casting','Partner e sponsor','Social e comunicazione','Logistica','Montaggio','Amministrazione'];
+function programmi(){const seen=new Set();const out=[];[...PROG_BASE,...rows('produzioni').sort(sortByName).map(r=>r.nome)].forEach(n=>{n=String(n||'').trim();if(n&&!seen.has(n.toLowerCase())){seen.add(n.toLowerCase());out.push(n)}});
+  rows('todo').forEach(r=>{const n=String(r.programma||'').trim();if(n&&n!==GENERALE&&!seen.has(n.toLowerCase())){seen.add(n.toLowerCase());out.push(n)}});return[...out,GENERALE]}
+const catOfTodo=r=>r.categoria||r.area||'Senza categoria';const progOfTodo=r=>r.programma||GENERALE;
 
 /* Schema delle raccolte: campi del modulo e come mostrarli */
 const COLL={
@@ -343,13 +391,13 @@ const COLL={
     {k:'stato',l:'Stato',opts:['Da contattare','Proposta inviata','In trattativa','Confermato','Chiuso']},
     {k:'produzione',l:'Produzione'},{k:'referente',l:'Referente'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},{k:'note',l:'Note',t:'area'}]},
   collaboratori:{label:'collaboratore',fields:[
-    {k:'nome',l:'Nome e cognome',req:1},{k:'ruolo',l:'Ruolo',ph:'Operatore, fonico, autrice…'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},
+    {k:'nome',l:'Nome e cognome',req:1},{k:'gruppo',l:'Gruppo',opts:['Interno','Collaboratore esterno']},{k:'ruolo',l:'Ruolo / categoria',ph:'Autore, operatore, fonico…'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},
     {k:'citta',l:'Città'},{k:'produzioni',l:'Ha lavorato su',ph:'es. Pizza Maker'},{k:'note',l:'Note',t:'area'},
     {k:'tariffa',l:'Tariffa (solo titolari)',priv:1,ph:'es. 250 € a giornata'}]},
   fornitori:{label:'fornitore',fields:[
     {k:'nome',l:'Nome',req:1},{k:'categoria',l:'Categoria',opts:['Catering','Alloggi','Trasporti','Noleggio attrezzatura','Scenografia e props','Location','Altro']},
     {k:'referente',l:'Referente'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},{k:'citta',l:'Città'},{k:'note',l:'Note e preventivi',t:'area'}]},
-  app_esterne:{label:'app',fields:[{k:'nome',l:'Nome',req:1},{k:'link',l:'Link per scaricarla',t:'url',ph:'https://…netlify.app'},{k:'password',l:'Password'},{k:'note',l:'Note',t:'area'}]},
+  app_esterne:{label:'app',fields:[{k:'nome',l:'Nome',req:1},{k:'link',l:'Link per scaricarla',t:'url',ph:'https://…'},{k:'password',l:'Password'},{k:'note',l:'Note',t:'area'}]},
   assenze:{label:'assenza',fields:[
     {k:'persona',l:'Chi',req:1,list:'people',ph:'Nome'},{k:'motivo',l:'Motivo',opts:['Ferie','Fuori sede','Malattia','Permesso','Altro']},
     {k:'dal',l:'Dal',t:'date',req2:1},{k:'al',l:'Al (compreso)',t:'date'},{k:'note',l:'Note',t:'area'}]},
@@ -386,10 +434,12 @@ function normEvents(payload){
     let sk,ek,time='';
     if(allDay){sk=e.start.date;ek=addDays(e.end&&e.end.date||sk,-1);if(ek<sk)ek=sk}
     else{const s=new Date(e.start.dateTime),en=new Date(e.end&&e.end.dateTime||e.start.dateTime);sk=dayKey(s);ek=dayKey(new Date(en.getTime()-1));if(ek<sk)ek=sk;time=timeFmt.format(s)+'–'+timeFmt.format(en)}
-    const title=e.summary||'(senza titolo)';const abs=allDay&&(e.colorId==='8'||e.transparency==='transparent'||/\b(out|assente|assenza|ferie|malat|permesso)/i.test(title));
-    out.push({id:e.id,title,abs,sk,ek,time,allDay,loc:e.location||'',desc:e.description||'',color:GCOL[e.colorId]||'#B98F3E',link:safeUrl(e.htmlLink)});
+    const title=e.summary||'(senza titolo)';const edit=/^\s*edit\b/i.test(title);const abs=!edit&&allDay&&(e.colorId==='8'||e.transparency==='transparent'||/\b(out|assente|assenza|ferie|malat|permesso)/i.test(title));
+    out.push({id:e.id,title,abs,edit,sk,ek,time,allDay,loc:e.location||'',desc:e.description||'',color:GCOL[e.colorId]||'#B98F3E',link:safeUrl(e.htmlLink)});
   });return out}
-function eventsOn(list,k){return(list||[]).filter(e=>!e.abs&&e.sk<=k&&e.ek>=k).sort((a,b)=>(a.allDay===b.allDay?a.time.localeCompare(b.time):a.allDay?-1:1))}
+function editsOn(list,k){return(list||[]).filter(e=>e.edit&&e.sk<=k&&e.ek>=k).sort((a,b)=>a.time.localeCompare(b.time))}
+function editsHtml(ed){return ed.length?`<div class="edits">${ed.map(e=>`<span>${e.link?`<a href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.title)}</a>`:esc(e.title)}${e.time?' · '+esc(e.time):''}</span>`).join('')}</div>`:''}
+function eventsOn(list,k){return(list||[]).filter(e=>!e.abs&&!e.edit&&e.sk<=k&&e.ek>=k).sort((a,b)=>(a.allDay===b.allDay?a.time.localeCompare(b.time):a.allDay?-1:1))}
 /* assenze = righe dell'app + giornate grigie/OUT del calendario Google */
 const cleanName=t=>String(t||'').replace(/\b(out|assente|assenza|ferie|malattia|permesso)\b/ig,'').replace(/[-–·:]+$/,'').trim()||String(t||'');
 const titleCase=t=>t.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
@@ -463,8 +513,8 @@ function renderHomeCal(){
   const n=calNotice('week');const list=S.cal.week;
   if(!list){el.innerHTML=n||'<p class="status">Carico il calendario FENICE FILM…</p>';return}
   const t=todayKey();let html='';
-  for(let i=0;i<7;i++){const k=addDays(t,i);const evs=eventsOn(list,k);if(!evs.length)continue;
-    html+=`<li><div class="dbox ${i===0?'today':''}"><b class="num">${+k.slice(8)}</b><span>${i===0?'oggi':esc(wd(k))}</span></div><div class="evs">${evs.map(evRow).join('')}</div></li>`}
+  for(let i=0;i<7;i++){const k=addDays(t,i);const evs=eventsOn(list,k);const ed=editsOn(list,k);if(!evs.length&&!ed.length)continue;
+    html+=`<li><div class="dbox ${i===0?'today':''}"><b class="num">${+k.slice(8)}</b><span>${i===0?'oggi':esc(wd(k))}</span></div><div class="evs">${evs.map(evRow).join('')}${editsHtml(ed)}</div></li>`}
   el.innerHTML=n+(html?`<ul class="agenda">${html}</ul>`:'<div class="empty"><b>Settimana libera</b><span>Nessun appuntamento nei prossimi 7 giorni sul calendario FENICE FILM.</span></div>')}
 function evRow(e){const t=e.allDay?'<time>tutto il giorno</time>':`<time>${esc(e.time)}</time>`;
   const title=e.link?`<a href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.title)}</a>`:`<span style="font-weight:600">${esc(e.title)}</span>`;
@@ -481,13 +531,14 @@ function renderCal(){
   for(let i=0;i<dowFirst;i++)h+='<div class="cell blank"></div>';
   for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`;const evs=eventsOn(list,k);
     const cls=['cell',k===t?'today':'',k<t?'past':'',k===S.calSel?'sel':''].join(' ');
-    h+=`<button class="${cls}" data-day="${k}" aria-label="${esc(longDay(k))}, ${evs.length} appuntamenti${absOn(ABS,k).length?', '+absOn(ABS,k).length+' assenti':''}"><span class="d">${d}</span>${evs.slice(0,2).map(e=>`<span class="pill" style="background:${e.color}">${esc(e.title)}</span>`).join('')}${evs.length>2?`<span class="more">+${evs.length-2}</span>`:''}${(()=>{const ab=absOn(ABS,k);return ab.length?`<span class="ini" title="Fuori: ${esc(ab.map(x=>x.who).join(', '))}">${esc(ab.map(x=>initials(x.who)).join(' · '))}</span>`:''})()}</button>`}
+    const ed=editsOn(list,k);
+    h+=`<button class="${cls}" data-day="${k}" aria-label="${esc(longDay(k))}, ${evs.length} appuntamenti${ed.length?', '+ed.length+' edit':''}${absOn(ABS,k).length?', '+absOn(ABS,k).length+' assenti':''}"><span class="d">${d}</span>${ed.length?`<i class="edot" title="${esc(ed.map(e=>e.title).join(' · '))}"></i>`:''}${evs.slice(0,2).map(e=>`<span class="pill" style="background:${e.color}">${esc(e.title)}</span>`).join('')}${evs.length>2?`<span class="more">+${evs.length-2}</span>`:''}${(()=>{const ab=absOn(ABS,k);return ab.length?`<span class="ini" title="Fuori: ${esc(ab.map(x=>x.who).join(', '))}">${esc(ab.map(x=>String(x.who).trim().split(/\s+/)[0]).join(' · '))}</span>`:''})()}</button>`}
   $('#cal-grid').innerHTML=h;
   const k=S.calSel;const box=$('#cal-day');
   if(!k||k.slice(0,7)!==S.calMonth){box.innerHTML='<p class="muted">Tocca un giorno per vedere gli appuntamenti.</p>';return}
   const evs=eventsOn(list,k);
   const ab=absOn(ABS,k);
-  box.innerHTML=`<span class="label">${esc(longDay(k))}</span>`+(ab.length?`<div class="absrow"><span class="muted" style="font-size:.78rem;font-weight:700">Fuori:</span>${ab.map(x=>`<span class="abs">${esc(x.who)}${x.why?' · '+esc(x.why):''}</span>`).join('')}</div>`:'')+(evs.length?`<div class="evs">${evs.map(evRow).join('')}</div>`:'<p class="muted">Nessun appuntamento.</p>')}
+  box.innerHTML=`<span class="label">${esc(longDay(k))}</span>`+(ab.length?`<div class="absrow"><span class="muted" style="font-size:.78rem;font-weight:700">Fuori:</span>${ab.map(x=>`<span class="abs">${esc(x.who)}${x.why?' · '+esc(x.why):''}</span>`).join('')}</div>`:'')+(evs.length?`<div class="evs">${evs.map(evRow).join('')}</div>`:(editsOn(list,k).length?'':'<p class="muted">Nessun appuntamento.</p>'))+editsHtml(editsOn(list,k))}
 function setMonth(ym){S.calMonth=ym;S.cal.month=null;delete S.calErr.month;renderCal();watchCal('month')}
 
 /* ---------- rendering liste ---------- */
@@ -513,13 +564,26 @@ function renderProd(){
 
 function personCard(c,d){
   const tags=[];const st=d.stato;if(st)tags.push(`<span class="tag ${STATO_CLS[st]||''}">${esc(st)}</span>`);
-  const cat=d.tipo||d.categoria||d.ruolo;if(cat)tags.push(`<span class="tag">${esc(cat)}</span>`);
+  const cat=d.tipo||d.categoria||d.ruolo||(c==='collaboratori'?'Ruolo da indicare':'');if(cat)tags.push(`<span class="tag ${!d.tipo&&!d.categoria&&!d.ruolo?'warn':''}">${esc(cat)}</span>`);
   const meta=[d.referente&&('Ref. '+d.referente),d.produzione,d.citta,d.produzioni].filter(Boolean).map(esc).join(' · ');
   const tar=c==='collaboratori'&&S.admin&&S.data.tariffe[d._id]&&S.data.tariffe[d._id].tariffa?`<span class="cline"><span class="tag gold">${esc(S.data.tariffe[d._id].tariffa)}</span></span>`:'';
   return card(c,d,`${tags.length?`<div class="tags">${tags.join('')}</div>`:''}<span class="cname">${esc(d.nome)}</span>${meta?`<span class="cmeta">${meta}</span>`:''}${telLine(d)}${tar}${d.note?`<span class="cline muted">${esc(d.note)}</span>`:''}`)}
 const RUB={clienti:{t:'Clienti e partner',chip:'stato',empty:'<b>Nessun cliente o partner</b><span>Aggiungi brand, sponsor e committenti con “Aggiungi”.</span>'},
-  collaboratori:{t:'Collaboratori',chip:'ruolo',empty:'<b>Rubrica vuota</b><span>Aggiungi operatori, autori e tecnici con “Aggiungi”.</span>'},
+  collaboratori:{t:'Persone',chip:'ruolo',empty:'<b>Rubrica vuota</b><span>Aggiungi operatori, autori e tecnici con “Aggiungi”.</span>'},
   fornitori:{t:'Fornitori',chip:'categoria',empty:'<b>Nessun fornitore</b><span>Aggiungi catering, alloggi e noleggi con “Aggiungi”.</span>'}};
+const grp=d=>d.gruppo==='Interno'?'Interno':'Collaboratore esterno';
+const catOf=d=>{const r=String(d.ruolo||'').trim();return !r?'Ruolo da indicare':/^autor/i.test(r)?'Autori':/^operat/i.test(r)?'Operatori':/^fonic/i.test(r)?'Fonici':/^montat/i.test(r)?'Montaggio':r.charAt(0).toUpperCase()+r.slice(1)};
+function peopleHtml(list){
+  if(!list.length)return'';
+  const ord=(a,b)=>(a.ordine??99)-(b.ordine??99)||sortByName(a,b);
+  const int=list.filter(d=>grp(d)==='Interno').sort(ord);
+  const ext=list.filter(d=>grp(d)!=='Interno');
+  let h='';
+  if(int.length)h+=`<div class="ghead"><h3>Interno</h3><span class="num">${int.length}</span></div>`+int.map(d=>personCard('collaboratori',d)).join('');
+  if(ext.length){h+=`<div class="ghead"><h3>Collaboratori esterni</h3><span class="num">${ext.length}</span></div>`;
+    const cats=[...new Set(ext.map(catOf))].sort((a,b)=>a==='Ruolo da indicare'?1:b==='Ruolo da indicare'?-1:a.localeCompare(b,'it'));
+    cats.forEach(cat=>{const g=ext.filter(d=>catOf(d)===cat).sort(sortByName);h+=`<div class="gsub">${esc(cat)}</div>`+g.map(d=>personCard('collaboratori',d)).join('')})}
+  return h}
 function renderRub(){
   const c=S.rub;const cfg=RUB[c];$('#rub-title').textContent=cfg.t;
   document.querySelectorAll('.seg a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+c?'page':'false'));
@@ -528,7 +592,7 @@ function renderRub(){
   $('#rub-chips').innerHTML=vals.length>1?chipsHtml(c,vals):'';
   const q=S.q.trim().toLowerCase();const f=S.chip[c];
   const list=all.filter(r=>(!f||r[cfg.chip]===f)&&(!q||Object.values(r).join(' ').toLowerCase().includes(q)));
-  $('#rub-list').innerHTML=loadingOr(c,list.map(d=>personCard(c,d)).join(''),q||f?'<b>Nessun risultato</b><span>Prova un\'altra ricerca.</span>':cfg.empty);
+  $('#rub-list').innerHTML=loadingOr(c,c==='collaboratori'?peopleHtml(list):list.map(d=>personCard(c,d)).join(''),q||f?'<b>Nessun risultato</b><span>Prova un\'altra ricerca.</span>':cfg.empty);
   $('#s-clienti').textContent=S.ready.clienti?Object.keys(S.data.clienti).length:'';
   $('#s-collab').textContent=S.ready.collaboratori?Object.keys(S.data.collaboratori).length:'';
   $('#s-forn').textContent=S.ready.fornitori?Object.keys(S.data.fornitori).length:''}
@@ -542,16 +606,33 @@ function renderDocs(){
   const ris=rows('riservati').sort(sortByName).filter(r=>!f||r.area===f);
   $('#l-riservati').innerHTML=loadingOr('riservati',ris.map(d=>docCard('riservati',d)).join(''),'<span>Nessun documento riservato. Scegli “Solo titolari” quando aggiungi un contratto o un preventivo.</span>')}
 
+function todoSort(a,b){return(a.fatto-b.fatto)||String(a.scadenza||'9').localeCompare(String(b.scadenza||'9'))||String(a.creato).localeCompare(String(b.creato))}
+function todoLi(r,withProg){const t=todayKey();const late=!r.fatto&&r.scadenza&&r.scadenza<t;
+  const sub=[withProg?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
+  const tag=withProg&&r.programma&&r.programma!==GENERALE?`<span class="ptag">${esc(r.programma)}</span>`:'';
+  return`<li class="${r.fatto?'done':''}"><button class="tick" data-tick="${esc(r._id)}" aria-label="${r.fatto?'Segna da fare':'Segna fatto'}" aria-pressed="${!!r.fatto}" ${S.canWrite?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></button>
+    <span class="tt">${tag}${esc(r.testo)}${sub||late?`<small class="${late?'late':''}">${late?'In ritardo'+(sub?' · ':''):''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}
+function fillTodoSelects(){const P=programmi();
+  [['#todo-prog','#df-prog']].flat().forEach(sel=>{const el=$(sel);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Programma…</option>'+P.map(p=>`<option>${esc(p)}</option>`).join('');el.value=P.includes(cur)?cur:''});
+  ['#todo-area','#df-cat'].forEach(sel=>{const el=$(sel);if(!el||el.options.length)return;el.innerHTML='<option value="">Categoria…</option>'+CATEGORIE.map(a=>`<option>${esc(a)}</option>`).join('')})}
 function renderTodo(){
-  const all=rows('todo').sort((a,b)=>(a.fatto-b.fatto)||String(a.scadenza||'9').localeCompare(String(b.scadenza||'9'))||String(a.creato).localeCompare(String(b.creato)));
-  const t=todayKey();const open=all.filter(r=>!r.fatto).length;
+  fillTodoSelects();
+  const all=rows('todo').sort(todoSort);
+  const open=all.filter(r=>!r.fatto).length;
   $('#todo-count').textContent=S.ready.todo?`${open} aperte`:'';
+  const td=$('#t-dafare');if(td)td.textContent=S.ready.todo?open:'–';
   const recentDone=all.filter(r=>r.fatto).slice(0,5);
   const list=[...all.filter(r=>!r.fatto),...recentDone];
-  $('#todo-list').innerHTML=loadingOr('todo',list.map(r=>{const late=!r.fatto&&r.scadenza&&r.scadenza<t;
-    const sub=[r.area,r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(Boolean).join(' · ');
-    return`<li class="${r.fatto?'done':''}"><button class="tick" data-tick="${esc(r._id)}" aria-label="${r.fatto?'Segna da fare':'Segna fatto'}" aria-pressed="${!!r.fatto}" ${S.canWrite?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></button>
-    <span class="tt">${esc(r.testo)}${sub?`<small class="${late?'late':''}">${late?'In ritardo · ':''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}).join(''),'<b>Niente in sospeso</b><span>Scrivi qui sotto la prima cosa da fare.</span>')}
+  $('#todo-list').innerHTML=loadingOr('todo',list.map(r=>todoLi(r,true)).join(''),'<b>Niente in sospeso</b><span>Scrivi qui sotto la prima cosa da fare.</span>');
+  /* pagina Da fare: per programma, poi per categoria */
+  const P=programmi();const used=P.filter(p=>all.some(r=>progOfTodo(r)===p));
+  $('#f-dafare').innerHTML=used.length>1?chipsHtml('dafare',used):'';
+  const f=S.chip.dafare;
+  const groups=used.filter(p=>!f||p===f).map(p=>{const items=all.filter(r=>progOfTodo(r)===p);const op=items.filter(r=>!r.fatto).length;
+    const cats=[...CATEGORIE,...new Set(items.map(catOfTodo))].filter((c,i,a)=>a.indexOf(c)===i&&items.some(r=>catOfTodo(r)===c));
+    return`<div class="panel pgroup"><h3>${esc(p)}<small>${op} aperte</small></h3>${cats.map(c=>{const its=items.filter(r=>catOfTodo(r)===c);const shown=[...its.filter(r=>!r.fatto),...its.filter(r=>r.fatto).slice(0,3)];
+      return`<div class="cgroup"><span class="label">${esc(c)}</span><ul class="todo">${shown.map(r=>todoLi(r,false)).join('')}</ul></div>`}).join('')}</div>`}).join('');
+  $('#dafare-list').innerHTML=loadingOr('todo',groups,'<b>Ancora niente</b><span>Scrivi sopra cosa devi fare, scegli programma e categoria: compare qui e in Home.</span>')}
 
 function renderCounts(){
   const n=c=>S.ready[c]?Object.keys(S.data[c]).length:'–';
@@ -560,7 +641,7 @@ function renderCounts(){
 
 function applyRole(){
   document.querySelectorAll('[data-admin]').forEach(el=>el.hidden=!S.admin);
-  $('#todo-form').hidden=!S.canWrite;
+  $('#todo-form').hidden=!S.canWrite;$('#df-form').hidden=!S.canWrite;
   const w=$('#who');if(S.user){w.hidden=false;w.textContent=S.admin?'Titolare':'Collaboratore'}
   $('#foot').textContent=S.admin?'Vedi tutto come titolare: clienti, tariffe e documenti riservati sono visibili solo a te e al tuo socio.':'Alcune sezioni (clienti, tariffe, documenti riservati) sono visibili solo ai titolari.'}
 function renderAll(){applyRole();renderAway();renderPM();renderProd();renderRub();renderDocs();renderTodo();renderCounts();renderHomeCal()}
@@ -613,10 +694,11 @@ async function delSheet(btn){
 const COLLPATH={produzioni:'produzioni',clienti:'clienti',collaboratori:'collaboratori',fornitori:'fornitori',documenti:'documenti',riservati:'documenti_riservati',tariffe:'tariffe',todo:'todo',assenze:'assenze',app_esterne:'app_esterne'};
 
 /* ---------- navigazione ---------- */
-const ROUTES={home:'home',calendario:'calendario',produzioni:'produzioni',clienti:'rubrica',collaboratori:'rubrica',fornitori:'rubrica',documenti:'documenti'};
+const ROUTES={home:'home',dafare:'dafare',proposte:'proposte',calendario:'calendario',produzioni:'produzioni',clienti:'rubrica',collaboratori:'rubrica',fornitori:'rubrica',documenti:'documenti'};
 function route(){
   let h=(location.hash||'#home').slice(1);if(!ROUTES[h])h='home';
   if(h==='clienti'&&S.userKnown&&!S.admin)h='collaboratori';
+  if(h==='proposte'&&S.userKnown&&!S.admin)h='home';
   S.route=h;const view=ROUTES[h];if(view==='rubrica'){S.rub=h;renderRub()}
   document.querySelectorAll('section.view').forEach(s=>s.hidden=s.id!=='v-'+view);
   document.querySelectorAll('.tabbar a').forEach(a=>a.setAttribute('aria-current',a.dataset.tab===view?'page':'false'));
@@ -627,7 +709,7 @@ addEventListener('hashchange',route);
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-chip],[data-edit],[data-new],[data-tick],[data-deltodo],[data-day],[data-cal-allow],#cal-prev,#cal-next,#cal-today,#rub-new,#sh-cancel,#sh-del');
   if(!t){if(e.target.id==='scrim')closeSheet();return}
-  if(t.dataset.chip){const k=t.dataset.chip;S.chip[k]=S.chip[k]===t.dataset.val?'':t.dataset.val;k==='produzioni'?renderProd():k==='documenti'?renderDocs():renderRub();return}
+  if(t.dataset.chip){const k=t.dataset.chip;S.chip[k]=S.chip[k]===t.dataset.val?'':t.dataset.val;k==='produzioni'?renderProd():k==='documenti'?renderDocs():k==='dafare'?renderTodo():renderRub();return}
   if(t.dataset.edit){openSheet(t.dataset.edit,t.dataset.id);return}
   if(t.dataset.new){openSheet(t.dataset.new,null);return}
   if(t.id==='rub-new'){openSheet(S.rub,null);return}
@@ -645,11 +727,12 @@ document.addEventListener('click',async e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#scrim').hidden)closeSheet()});
 document.addEventListener('submit',async e=>{
   if(e.target.id==='sh-form'){e.preventDefault();saveSheet();return}
-  if(e.target.id==='todo-form'){e.preventDefault();const testo=$('#todo-text').value.trim();if(!testo||!S.db)return;
-    try{await S.db.collection('todo').add({testo,scadenza:$('#todo-date').value||'',area:$('#todo-area').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});$('#todo-text').value='';$('#todo-date').value='';toast('Aggiunta')}catch(err){showErr(err)}}
+  if(e.target.id==='todo-form'||e.target.id==='df-form'){e.preventDefault();const h=e.target.id==='todo-form';const q=x=>$(h?{t:'#todo-text',d:'#todo-date',p:'#todo-prog',c:'#todo-area'}[x]:{t:'#df-text',d:'#df-date',p:'#df-prog',c:'#df-cat'}[x]);
+    const testo=q('t').value.trim();if(!testo||!S.db)return;
+    try{await S.db.collection('todo').add({testo,scadenza:q('d').value||'',programma:q('p').value||'',categoria:q('c').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});q('t').value='';q('d').value='';toast('Aggiunta')}catch(err){showErr(err)}}
 });
 $('#rub-q').addEventListener('input',e=>{S.q=e.target.value;renderRub()});
-$('#todo-area').innerHTML='<option value="">Area…</option>'+AREE.map(a=>`<option>${esc(a)}</option>`).join('');
+fillTodoSelects();
 
 /* ---------- avvio ---------- */
 S.calMonth=todayKey().slice(0,7);S.calSel=todayKey();
@@ -664,7 +747,7 @@ route();renderAll();
   if(u){S.user=u;try{S.admin=!!(await u.canEdit())}catch(e){S.admin=false}
     S.canWrite=true; /* "Da fare" è aperto a tutto il team (regola todo: interact); un rifiuto lo segnala il toast */
     try{S.me=await u.id()}catch(e){}}
-  S.userKnown=true;if(S.route==='clienti'&&!S.admin)location.hash='#collaboratori';
+  S.userKnown=true;if(S.route==='clienti'&&!S.admin)location.hash='#collaboratori';if(S.route==='proposte'&&!S.admin)location.hash='#home';
   const db=await claude.use('db');
   if(!db){S.failed=true;renderAll();return}
   S.db=db;

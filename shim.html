@@ -66,3 +66,37 @@ document.getElementById('ff-form').addEventListener('submit',async e=>{e.prevent
 if(token&&role&&ls.get(NM))start();else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>showLogin());else showLogin();
 })();
 </script>
+<div id="ff-prop" class="ff-prop" hidden role="dialog" aria-modal="true" aria-label="Proposta">
+  <div class="ff-pbar"><button class="btn" type="button" id="ff-pclose">‹ Torna all'app</button><span id="ff-ptitle">Proposta di partnership</span></div>
+  <iframe id="ff-pframe" title="Proposta"></iframe>
+</div>
+<style>
+.ff-prop{position:fixed;inset:0;z-index:60;background:var(--pellicola);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.ff-pbar{display:flex;align-items:center;gap:10px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));color:#F1ECE1}
+.ff-pbar span{flex:1;min-width:0;font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ff-prop iframe{flex:1;border:0;width:100%;background:#fff}
+</style>
+<script>
+/* Proposte: la pagina arriva dal server solo con la password dei titolari e gira dentro l'app.
+   Al suo interno "Scarica PDF" e "Salva come standard" usano questo ponte al posto di claude.ai. */
+(function(){
+const tok=()=>{try{return localStorage.getItem('ff-token')}catch(e){return null}};
+const bridge=`<script>(function(){
+function share(blob,name){try{var f=new File([blob],name,{type:blob.type||'application/pdf'});if(/iP(hone|ad|od)|Android/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:name}).then(function(){return true},function(e){if(e&&e.name==='AbortError')throw{code:'declined'};return false})}catch(e){}return Promise.resolve(false)}
+var downloads={save:function(o){var blob=o.data instanceof Blob?o.data:new Blob([o.data]);var name=o.filename||'proposta.pdf';return share(blob,name).then(function(done){if(done)return;var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},60000)})}};
+var artifact={publish:function(html){var t=parent.localStorage.getItem('ff-token');return fetch('/api/proposta',{method:'POST',headers:{authorization:'Bearer '+t,'content-type':'text/html; charset=utf-8'},body:html}).then(function(r){if(r.ok)return;if(r.status===413)throw{code:'too_large'};if(r.status===401||r.status===403)throw{code:'not_writer'};throw{code:'unavailable'}})}};
+var user={canEdit:function(){return Promise.resolve(true)},isOwner:function(){return Promise.resolve(true)}};
+window.claude={use:function(n){return Promise.resolve(n==='downloads'?downloads:n==='artifact'?artifact:n==='user'?user:null)}};
+})();<\/script>`;
+let busy=false;
+async function open(){if(busy)return;busy=true;const box=document.getElementById('ff-prop'),fr=document.getElementById('ff-pframe');
+  try{const r=await fetch('/api/proposta',{headers:{authorization:'Bearer '+tok()}});if(!r.ok)throw r.status;let html=await r.text();
+    const i=html.search(/<head[^>]*>/i);if(i>=0){const j=html.indexOf('>',i)+1;html=html.slice(0,j)+bridge+html.slice(j)}else html=bridge+html;
+    fr.srcdoc=html;box.hidden=false;document.body.style.overflow='hidden'}
+  catch(e){const t=document.getElementById('toast');if(t){t.textContent=e===403?'Le proposte sono solo per i titolari':'Proposta non disponibile, riprova';t.hidden=false;setTimeout(()=>t.hidden=true,2600)}}
+  finally{busy=false}}
+function close(){document.getElementById('ff-prop').hidden=true;document.getElementById('ff-pframe').srcdoc='';document.body.style.overflow=''}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('[data-proposta]');if(!a)return;e.preventDefault();open()});
+document.getElementById('ff-pclose').addEventListener('click',close);
+})();
+</script>

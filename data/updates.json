@@ -1,1 +1,112 @@
-[]
+[
+ {
+  "id": "2026-11-22-persone-e-byness",
+  "ops": [
+   {
+    "op": "set",
+    "collection": "collaboratori",
+    "docId": "roberta-zaccaro",
+    "data": {
+     "nome": "Roberta Zaccaro",
+     "gruppo": "Interno",
+     "ruolo": "Produzione",
+     "telefono": "334 743 4301",
+     "email": "",
+     "citta": "",
+     "produzioni": "",
+     "note": "",
+     "ordine": 1
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "ludovica-trezzi",
+    "data": {
+     "gruppo": "Interno",
+     "ruolo": "",
+     "telefono": "+39 331 848 2764",
+     "ordine": 2
+    }
+   },
+   {
+    "op": "set",
+    "collection": "collaboratori",
+    "docId": "bruno-avagliano",
+    "data": {
+     "nome": "Bruno Avagliano",
+     "gruppo": "Interno",
+     "ruolo": "",
+     "telefono": "+39 392 321 5038 · +39 351 395 4355",
+     "email": "",
+     "citta": "",
+     "produzioni": "",
+     "note": "",
+     "ordine": 3
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "luca-carcano",
+    "data": {
+     "gruppo": "Interno",
+     "ruolo": "",
+     "telefono": "+39 348 406 9662",
+     "ordine": 4
+    }
+   },
+   {
+    "op": "set",
+    "collection": "collaboratori",
+    "docId": "sabina-nanni",
+    "data": {
+     "nome": "Sabina Nanni",
+     "gruppo": "Collaboratore esterno",
+     "ruolo": "Autrice",
+     "telefono": "+39 333 825 9466",
+     "email": "",
+     "citta": "",
+     "produzioni": "",
+     "note": ""
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "claudio-seggi",
+    "data": {
+     "gruppo": "Collaboratore esterno",
+     "ruolo": "Autore",
+     "telefono": "348 243 7210"
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "brenda",
+    "data": {
+     "gruppo": "Collaboratore esterno"
+    }
+   },
+   {
+    "op": "delete",
+    "collection": "documenti_riservati",
+    "docId": "partnership-byness-trinci"
+   }
+  ]
+ },
+ {
+  "id": "2026-11-22-pizza-maker-link",
+  "ops": [
+   {
+    "op": "update",
+    "collection": "app_esterne",
+    "docId": "pizza-maker",
+    "data": {
+     "link": "https://pizza-maker-app.robertazaccaro02.workers.dev/"
+    }
+   }
+  ]
+ }
+]

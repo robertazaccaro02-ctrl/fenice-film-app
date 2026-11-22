@@ -1,7 +1,7 @@
 {
  "app_esterne": {
   "pizza-maker": {
-   "link": "https://pizzamaker-app.netlify.app",
+   "link": "https://pizza-maker-app.robertazaccaro02.workers.dev/",
    "nome": "Pizza Maker",
    "note": "Come si usa\n• Home: cose urgenti e calendario (tocca un giorno per i dettagli)\n• Autori: convocati per giorno e gruppo. Spunta il quadrato quando hai fatto il colloquio, “Scarta” per chi non va avanti, e scrivi le note in “Dettagli”\n• Logistica: pranzo, treni e biglietti da scaricare, alloggio, staff con i telefoni, props, partner\n• Casting: guida, sfide, contenuti, format\n\nQuello che segni lo vedono tutti in pochi secondi. Se l’app sembra vecchia, chiudila e riaprila. Dentro ci sono dati dei candidati, anche minorenni: niente screenshot da girare e non passate la password.",
    "password": "1234"
@@ -77,14 +77,7 @@
    "telefono": "+39 331 848 2764"
   }
  },
- "documenti_riservati": {
-  "partnership-byness-trinci": {
-   "area": "Partnership e sponsor",
-   "link": "https://claude.ai/artifact/VuYbromnLPoMigHANJ2pH4",
-   "produzione": "",
-   "titolo": "Partnership 2027 Byness × Trinci"
-  }
- },
+ "documenti_riservati": {},
  "produzioni": {
   "samsung-live": {
    "app": "",

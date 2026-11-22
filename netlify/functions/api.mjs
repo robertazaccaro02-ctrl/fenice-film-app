@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import seed from "../../data/seed.json" with { type: "json" };
 import updates from "../../data/updates.json" with { type: "json" };
 import { eventsBetween } from "../lib/ics.mjs";
+import propostaBase from "../../data/proposte.mjs";
 
 const COLLECTIONS = ["produzioni", "clienti", "collaboratori", "fornitori", "documenti", "documenti_riservati", "tariffe", "todo", "assenze", "app_esterne"];
 // Visibili solo ai titolari
@@ -124,6 +125,24 @@ export default async (req) => {
   }
 
   const st = store();
+
+  // Proposte di partnership: solo titolari
+  if (path === "/proposta") {
+    if (role !== "t") return json({ error: "Solo i titolari possono aprire le proposte" }, 403);
+    if (req.method === "GET") {
+      const saved = await st.get("proposte/partnership");
+      return new Response(saved || propostaBase, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "private, no-store" } });
+    }
+    if (req.method === "POST") {
+      const html = await req.text();
+      if (!/^<!doctype html>/i.test(html.trim())) return json({ error: "Documento non valido" }, 400);
+      if (html.length > 5.5 * 1024 * 1024) return json({ error: "Troppe immagini pesanti", code: "too_large" }, 413);
+      await st.set("proposte/partnership", html);
+      await st.setJSON("proposte/partnership-info", { at: new Date().toISOString() });
+      return json({ ok: true });
+    }
+  }
+
   await ensureSeeded(st);
   await applyUpdates(st);
 
