@@ -9,6 +9,12 @@ const store = ({
   set: async (k, v) => mem.set(k, v), setJSON: async (k, v) => mem.set(k, JSON.stringify(v)), delete: async (k) => mem.delete(k),
   list: async ({ prefix }) => ({ blobs: [...mem.keys()].filter((k) => k.startsWith(prefix)).map((key) => ({ key })) }),
 });
+if (process.env.TEST_EVENTS) { // finge l'API Google con un file JSON {items:[...]}
+  const { generateKeyPairSync } = await import("node:crypto");
+  const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  env.GCAL_SERVICE_ACCOUNT = JSON.stringify({ client_email: "test@test.iam.gserviceaccount.com", private_key: privateKey.export({ type: "pkcs8", format: "pem" }) });
+  testFetch = async (u) => new Response(u.includes("oauth2") ? JSON.stringify({ access_token: "t", expires_in: 3600 }) : fs.readFileSync(process.env.TEST_EVENTS));
+}
 if (process.env.TEST_ICS) { env.GCAL_ICS_URL = "http://test/ics"; testFetch = async () => new Response(fs.readFileSync(process.env.TEST_ICS)); }
 const types = { ".html": "text/html", ".png": "image/png", ".webmanifest": "application/manifest+json" };
 http.createServer(async (req, res) => {

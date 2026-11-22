@@ -13,10 +13,19 @@ App interna di Fenice Film: calendario FENICE FILM, produzioni, rubrica (clienti
 2. Nel progetto appena creato: **Settings → Variables and Secrets → Add**, tipo **Secret**:
    - `PASSWORD_TITOLARI`: la password per te e il tuo socio
    - `PASSWORD_COLLABORATORI`: la password per i collaboratori (deve essere diversa)
-   - `GCAL_ICS_URL`: l'indirizzo segreto iCal del calendario FENICE FILM (vedi sotto)
+   - `GCAL_SERVICE_ACCOUNT`: il file JSON dell'account di servizio Google (vedi sotto). Serve per i colori degli eventi (grigio = assenza).
+   - `GCAL_ICS_URL` (riserva, facoltativo): l'indirizzo segreto iCal del calendario FENICE FILM. Non ha i colori.
 3. Da quel momento ogni modifica caricata su GitHub (ramo `main`) viene ripubblicata da sola in un paio di minuti.
 
 I dati (rubrica, da fare, assenze, proposta salvata) stanno in un archivio Cloudflare (Durable Object "Archivio") creato in automatico. La prima volta si riempie con `data/seed.json`.
+
+### Calendario con i colori: account di servizio Google
+1. console.cloud.google.com → crea un progetto (es. "Fenice Film App").
+2. **API e servizi → Libreria** → cerca **Google Calendar API** → **Abilita**.
+3. **IAM e amministrazione → Account di servizio → Crea account di servizio** → nome "calendario-app" → **Fine** (nessun ruolo).
+4. Apri l'account creato → **Chiavi → Aggiungi chiave → Crea nuova chiave → JSON**: si scarica un file.
+5. Google Calendar → FENICE FILM → **Impostazioni e condivisione → Condividi con persone specifiche** → aggiungi l'email dell'account di servizio (finisce con `iam.gserviceaccount.com`) con **Visualizzare tutti i dettagli degli eventi**.
+6. Cloudflare → Settings → Variables and Secrets → Secret `GCAL_SERVICE_ACCOUNT` = tutto il contenuto del file JSON.
 
 ### Indirizzo segreto del calendario
 Google Calendar dal computer → a sinistra passa sopra **FENICE FILM** → tre puntini → **Impostazioni e condivisione** → in fondo, **Indirizzo segreto in formato iCal** → copia. Non condividerlo: chi lo ha può leggere il calendario.

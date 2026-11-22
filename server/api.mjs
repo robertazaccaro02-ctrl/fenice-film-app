@@ -5,6 +5,7 @@ import { Buffer } from "node:buffer";
 import seed from "../data/seed.json" with { type: "json" };
 import updates from "../data/updates.json" with { type: "json" };
 import { eventsBetween } from "./ics.mjs";
+import { apiEventsBetween, parseServiceAccount } from "./gcal.mjs";
 
 const COLLECTIONS = ["produzioni", "clienti", "collaboratori", "fornitori", "documenti", "documenti_riservati", "tariffe", "todo", "assenze", "app_esterne"];
 // Visibili solo ai titolari
@@ -122,10 +123,19 @@ export async function handle(req, ctx) {
   if (path === "/calendar" && req.method === "GET") {
     const from = url.searchParams.get("from"), to = url.searchParams.get("to");
     if (!okDate(from) || !okDate(to)) return json({ error: "Date non valide" }, 400);
+    // 1) API Google con account di servizio (ha i colori), 2) indirizzo iCal segreto (senza colori)
+    if (ENV.GCAL_SERVICE_ACCOUNT) {
+      try {
+        const sa = parseServiceAccount(ENV.GCAL_SERVICE_ACCOUNT);
+        return json({ events: await apiEventsBetween(sa, ENV.GCAL_ID, from, to, FETCH || fetch), source: "api" });
+      } catch (e) {
+        if (!ENV.GCAL_ICS_URL) return json({ error: e.message, code: e.code === "server_unavailable" ? "server_unavailable" : "sa_error" }, 502);
+      }
+    }
     let text;
     try { text = await loadIcs(); } catch (e) { return json({ error: "Google Calendar non risponde", code: "server_unavailable" }, 502); }
     if (!text) return json({ error: "Calendario non collegato (GCAL_ICS_URL)", code: "not_configured" }, 503);
-    return json({ events: eventsBetween(text, from, to) });
+    return json({ events: eventsBetween(text, from, to), source: "ics" });
   }
 
   const st = ctx.store;

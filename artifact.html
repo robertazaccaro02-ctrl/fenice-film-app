@@ -346,6 +346,7 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
 <section class="view" id="v-documenti" hidden>
   <div class="phead"><div><span class="label">Archivio</span><h2>Documenti</h2></div></div>
   <div class="panel" style="border-color:var(--oro)"><span class="label">Archivio file</span><p style="font-family:var(--f-display);font-size:1.5rem;font-weight:700;line-height:1.15">Tutti i file di Fenice Film sono su MyAirBridge</p><div><a class="btn primary" href="https://www.myairbridge.com/it/#!/" target="_blank" rel="noopener">Apri MyAirBridge ›</a></div></div>
+  <div class="panel" data-admin><span class="label">Proposte · solo titolari</span><p style="font-family:var(--f-display);font-size:1.3rem;font-weight:700;line-height:1.15">Proposte Fenice Film</p><p class="muted" style="font-size:.85rem;max-width:62ch">La proposta di partnership per sponsor e brand: scrivi partner e programma, modifica testi e foto, scarica il PDF.</p><div><a class="btn primary" href="https://claude.ai/artifact/9u2gJ5Xaq2rYnfGzCc2TW1" target="_blank" rel="noopener" data-proposta="partnership">Apri le proposte ›</a></div></div>
   <div class="phead"><span class="label">Link utili (facoltativo)</span><button class="btn small" data-new="documenti" data-admin>+ Aggiungi link</button></div>
   <p class="muted" style="max-width:62ch;font-size:.85rem">Se serve, qui puoi salvare il link diretto a un file con la sua scadenza. Non è obbligatorio.</p>
   <div class="chips" id="f-documenti"></div>
@@ -438,7 +439,9 @@ function normEvents(payload){
     let sk,ek,time='';
     if(allDay){sk=e.start.date;ek=addDays(e.end&&e.end.date||sk,-1);if(ek<sk)ek=sk}
     else{const s=new Date(e.start.dateTime),en=new Date(e.end&&e.end.dateTime||e.start.dateTime);sk=dayKey(s);ek=dayKey(new Date(en.getTime()-1));if(ek<sk)ek=sk;time=timeFmt.format(s)+'–'+timeFmt.format(en)}
-    const title=e.summary||'(senza titolo)';const edit=/^\s*edit\b/i.test(title);const abs=!edit&&allDay&&(e.colorId==='8'||e.transparency==='transparent'||/\b(out|assente|assenza|ferie|malat|permesso)/i.test(title));
+    const title=e.summary||'(senza titolo)';const edit=/^\s*edit\b/i.test(title);/* assenza = evento grigio (anche con orario) o con OUT/ferie; senza colori (iCal) giornata intera "libera" con solo un nome */
+    const kw=/\b(out|assente|assenza|ferie|malat|permesso)/i.test(title);
+    const abs=!edit&&(e.colorId==='8'||kw||(e.colorId==null&&allDay&&e.transparency==='transparent'&&!/[-–:]/.test(title)&&title.trim().split(/\s+/).length<=2));
     out.push({id:e.id,title,abs,edit,sk,ek,time,allDay,loc:e.location||'',desc:e.description||'',color:GCOL[e.colorId]||'#B98F3E',link:safeUrl(e.htmlLink)});
   });return out}
 function editsOn(list,k){return(list||[]).filter(e=>e.edit&&e.sk<=k&&e.ek>=k).sort((a,b)=>a.time.localeCompare(b.time))}
