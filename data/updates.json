@@ -108,5 +108,36 @@
     }
    }
   ]
+ },
+ {
+  "id": "2026-11-22-brenda-interna",
+  "ops": [
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "brenda",
+    "data": {
+     "nome": "Brenda Rinaldi",
+     "gruppo": "Interno",
+     "ordine": 5
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "claudio-seggi",
+    "data": {
+     "gruppo": "Collaboratore esterno"
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "sabina-nanni",
+    "data": {
+     "gruppo": "Collaboratore esterno"
+    }
+   }
+  ]
  }
 ]

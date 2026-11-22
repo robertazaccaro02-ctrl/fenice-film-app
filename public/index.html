@@ -110,6 +110,9 @@ section.view{display:grid;gap:20px}
 .chipbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.78rem;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer}
 .chipbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 .cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.card .editmark{position:absolute;top:10px;right:12px;font-size:.72rem;font-weight:700;color:var(--gold-text);opacity:.85}
+button.card{position:relative;cursor:pointer;padding-right:70px}
+.tt button.tedit{all:unset;cursor:pointer;display:block}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;align-content:start;min-width:0;text-align:left;font:inherit;color:var(--ink)}
 button.card{cursor:pointer}
 button.card:hover{border-color:var(--oro)}
@@ -505,6 +508,7 @@ const COLL={
   fornitori:{label:'fornitore',fields:[
     {k:'nome',l:'Nome',req:1},{k:'categoria',l:'Categoria',opts:['Catering','Alloggi','Trasporti','Noleggio attrezzatura','Scenografia e props','Location','Altro']},
     {k:'referente',l:'Referente'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},{k:'citta',l:'Città'},{k:'note',l:'Note e preventivi',t:'area'}]},
+  todo:{label:'cosa da fare',fields:[{k:'testo',l:'Cosa',req:1},{k:'programma',l:'Programma',opts:[]},{k:'categoria',l:'Categoria',opts:[]},{k:'scadenza',l:'Entro il',t:'date'}]},
   app_esterne:{label:'app',fields:[{k:'nome',l:'Nome',req:1},{k:'link',l:'Link per scaricarla',t:'url',ph:'https://…'},{k:'password',l:'Password'},{k:'note',l:'Note',t:'area'}]},
   assenze:{label:'assenza',fields:[
     {k:'persona',l:'Chi',req:1,list:'people',ph:'Nome'},{k:'motivo',l:'Motivo',opts:['Ferie','Fuori sede','Malattia','Permesso','Altro']},
@@ -659,7 +663,7 @@ function rows(c){return Object.entries(S.data[c]||{}).map(([id,d])=>Object.assig
 function sortByName(a,b){return String(a.nome||a.titolo||'').localeCompare(String(b.nome||b.titolo||''),'it')}
 function telLine(d){const p=[];if(d.telefono)p.push(`<span class="cline num">☎ ${esc(d.telefono)}</span>`);if(d.email)p.push(`<span class="cline">✉ ${esc(d.email)}</span>`);return p.join('')}
 function chipsHtml(key,values){const cur=S.chip[key]||'';return['',...values].map(v=>`<button class="chipbtn" data-chip="${key}" data-val="${esc(v)}" aria-pressed="${cur===v}">${v?esc(v):'Tutti'}</button>`).join('')}
-function card(c,d,inner){const tagName=S.admin?'button':'div';return`<${tagName} class="card" ${S.admin?`data-edit="${c}" data-id="${esc(d._id)}"`:''}>${inner}</${tagName}>`}
+function card(c,d,inner){const tagName=S.admin?'button':'div';return`<${tagName} class="card" ${S.admin?`data-edit="${c}" data-id="${esc(d._id)}" aria-label="Modifica"`:''}>${S.admin?'<span class="editmark" aria-hidden="true">✎ Modifica</span>':''}${inner}</${tagName}>`}
 function loadingOr(c,html,emptyMsg){if(S.failed)return`<div class="empty"><b>Dati non disponibili</b><span>Ricarica la pagina e inserisci la password.</span></div>`;
   if(!S.ready[c])return'<p class="status">Carico…</p>';return html||`<div class="empty">${emptyMsg}</div>`}
 
@@ -724,7 +728,7 @@ function todoLi(r,withProg){const t=todayKey();const late=!r.fatto&&r.scadenza&&
   const sub=[withProg?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
   const tag=withProg&&r.programma&&r.programma!==GENERALE?`<span class="ptag">${esc(r.programma)}</span>`:'';
   return`<li class="${r.fatto?'done':''}"><button class="tick" data-tick="${esc(r._id)}" aria-label="${r.fatto?'Segna da fare':'Segna fatto'}" aria-pressed="${!!r.fatto}" ${S.canWrite?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></button>
-    <span class="tt">${tag}${esc(r.testo)}${sub||late?`<small class="${late?'late':''}">${late?'In ritardo'+(sub?' · ':''):''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}
+    <span class="tt">${tag}${S.canWrite?`<button class="tedit" data-edit="todo" data-id="${esc(r._id)}" aria-label="Modifica">${esc(r.testo)}</button>`:esc(r.testo)}${sub||late?`<small class="${late?'late':''}">${late?'In ritardo'+(sub?' · ':''):''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}
 function fillTodoSelects(){const P=programmi();
   [['#todo-prog','#df-prog']].flat().forEach(sel=>{const el=$(sel);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Programma…</option>'+P.map(p=>`<option>${esc(p)}</option>`).join('');el.value=P.includes(cur)?cur:''});
   ['#todo-area','#df-cat'].forEach(sel=>{const el=$(sel);if(!el||el.options.length)return;el.innerHTML='<option value="">Categoria…</option>'+CATEGORIE.map(a=>`<option>${esc(a)}</option>`).join('')})}
@@ -762,9 +766,11 @@ function renderAll(){applyRole();renderAway();renderPM();renderProd();renderRub(
 /* ---------- foglio di modifica ---------- */
 let editing=null;
 function openSheet(c,id){
-  if(!(S.admin||(c==='assenze'&&S.canWrite)))return;
+  if(!(S.admin||((c==='assenze'||c==='todo')&&S.canWrite)))return;
+  if(c==='todo'){COLL.todo.fields[1].opts=programmi();COLL.todo.fields[2].opts=CATEGORIE}
   const base=c==='riservati'?'documenti':c;const cfg=COLL[base];
   const d=id?Object.assign({},S.data[c][id]):{};
+  if(c==='todo'&&id){if(!d.categoria&&d.area)d.categoria=d.area;if(d.programma&&!COLL.todo.fields[1].opts.includes(d.programma))COLL.todo.fields[1].opts.push(d.programma)}
   if(base==='collaboratori'&&id)d.tariffa=(S.data.tariffe[id]||{}).tariffa||'';
   if(base==='documenti')d.riservato=c==='riservati'?'Solo titolari':'Tutto il team';
   if(base==='assenze'&&!id){d.dal=todayKey();}
@@ -775,7 +781,7 @@ function openSheet(c,id){
     else inp=`<input id="${idA}" type="${f.t||'text'}" value="${v}" ${f.ph?`placeholder="${esc(f.ph)}"`:''} ${f.req?'required':''} ${f.list?`list="dl-${f.list}"`:''} maxlength="400">`;
     return`<label for="${idA}">${esc(f.l)}${f.priv?' 🔒':''}${inp}</label>`};
   const fs=cfg.fields;
-  $('#sheet').innerHTML=`<span class="label">${id?'Modifica':'Nuovo'} ${esc(cfg.label)}</span><h3 id="sh-title">${id?esc(d.nome||d.titolo):'Aggiungi '+esc(cfg.label)}</h3>
+  $('#sheet').innerHTML=`<span class="label">${id?'Modifica':'Nuovo'} ${esc(cfg.label)}</span><h3 id="sh-title">${id?esc(d.nome||d.titolo||d.testo):'Aggiungi '+esc(cfg.label)}</h3>
    <form class="form" id="sh-form" novalidate>${field(fs[0])}<div class="row2">${fs.slice(1).filter(f=>f.t!=='area').map(field).join('')}</div>${fs.filter(f=>f.t==='area').map(field).join('')}
    <div class="acts">${id?'<button type="button" class="btn danger" id="sh-del">Elimina</button>':'<span></span>'}<div><button type="button" class="btn" id="sh-cancel">Annulla</button><button type="submit" class="btn primary">Salva</button></div></div>
    <p class="lock" id="sh-confirm" hidden></p></form><datalist id="dl-people">${[...new Set(['Roberta Zaccaro',...rows('collaboratori').map(r=>r.nome)])].map(n=>`<option value="${esc(n)}"></option>`).join('')}</datalist>`;

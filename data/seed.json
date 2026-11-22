@@ -43,7 +43,9 @@
   "brenda": {
    "citta": "",
    "email": "graphicsbybrenda@gmail.com",
-   "nome": "Brenda",
+   "gruppo": "Interno",
+   "nome": "Brenda Rinaldi",
+   "ordine": 5,
    "note": "",
    "produzioni": "Samsung – live",
    "ruolo": "Grafica",
