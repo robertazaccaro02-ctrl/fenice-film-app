@@ -139,5 +139,100 @@
     }
    }
   ]
+ },
+ {
+  "id": "2026-11-23-programmi",
+  "ops": [
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "pizza-maker",
+    "data": {
+     "nome": "Pizza Maker",
+     "tipo": "Programma TV",
+     "stato": "In preparazione",
+     "date": "Selezioni Pozzuoli 28–29 nov 2026 · Registrazioni Napoli 18 gen – 7 feb 2027 · Uscita su Prime Video 2027",
+     "luogo": "Napoli, Mostra d'Oltremare",
+     "referente": "",
+     "app": "https://pizza-maker-app.robertazaccaro02.workers.dev/",
+     "note": "Talent per pizzaioli amatoriali: 10 puntate da 40/50', 12 concorrenti. Giudici Luciano Pignataro e Alessandro Condurro, conduce Chiara Carcano. Il vincitore va al Pizza Expo di Las Vegas."
+    }
+   },
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "i-sapori-del-sole",
+    "data": {
+     "nome": "I Sapori del Sole",
+     "tipo": "Programma TV",
+     "stato": "In preparazione",
+     "date": "Nuova stagione primavera 2027",
+     "luogo": "Ristorante Le Trabe, Paestum",
+     "referente": "",
+     "app": "",
+     "note": "Stagione 2027 con Rosaria Sica e lo chef Marco Rispo. Stagione 2026: 700.000 utenti unici, 81,9 mln di minuti su Prime Video."
+    }
+   },
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "i-sapori-del-mediterraneo",
+    "data": {
+     "nome": "I Sapori del Mediterraneo",
+     "tipo": "Documentario",
+     "stato": "",
+     "date": "",
+     "luogo": "Crociera MSC nel Mediterraneo (7 notti)",
+     "referente": "",
+     "app": "",
+     "note": "Docufilm di 90' per Prime Video. Conducono Patrizia Pellegrino e Rosaria Sica."
+    }
+   },
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "case-da-sogno",
+    "data": {
+     "nome": "Case da Sogno",
+     "tipo": "Programma TV",
+     "stato": "In lavorazione",
+     "date": "Prima stagione in uscita nov 2026",
+     "luogo": "Roma, Milano, Puglia, Sardegna, Lago di Garda, Forte dei Marmi, Liguria, Piemonte",
+     "referente": "",
+     "app": "",
+     "note": "7 episodi con Andrea Cerioli e un agente immobiliare del territorio in ogni puntata. Prime Video."
+    }
+   },
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "the-king-of-gold",
+    "data": {
+     "nome": "The King of Gold",
+     "tipo": "Programma TV",
+     "stato": "",
+     "date": "",
+     "luogo": "",
+     "referente": "",
+     "app": "",
+     "note": ""
+    }
+   },
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "documentari-centenari",
+    "data": {
+     "nome": "Documentari Centenari",
+     "tipo": "Documentario",
+     "stato": "",
+     "date": "",
+     "luogo": "",
+     "referente": "",
+     "app": "",
+     "note": ""
+    }
+   }
+  ]
  }
 ]

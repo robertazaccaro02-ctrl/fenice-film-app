@@ -259,6 +259,10 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
     <div class="cards" id="home-prod"></div>
   </div>
 
+  <div class="panel" id="claude-panel" data-admin>
+    <div class="phead"><span class="label">Chat con Claude</span><button class="btn small" data-edit="app_esterne" data-id="claude-chat">Cambia link</button></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><a class="btn primary" id="claude-link" href="https://claude.ai/new" target="_blank" rel="noopener">Apri la chat con Claude ›</a><small class="muted" id="claude-note">Si apre claude.ai con il tuo account.</small></div>
+  </div>
   <div class="panel" id="pm-panel" hidden>
     <div class="phead"><span class="label">App Pizza Maker</span><button class="btn small" data-edit="app_esterne" data-id="pizza-maker" data-admin>Modifica</button></div>
     <div id="pm-body"></div>
@@ -462,7 +466,8 @@ const absOn=(all,k)=>all.filter(x=>x.sk<=k&&x.ek>=k);
 const shortD=k=>keyToDate(k).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'});
 const range=x=>x.sk===x.ek?shortD(x.sk):`${shortD(x.sk)} → ${shortD(x.ek)}`;
 const initials=n=>String(n||'').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
-function renderPM(){
+function renderClaude(){const d=S.data.app_esterne['claude-chat']||{};const u=safeUrl(d.link)||'https://claude.ai/new';$('#claude-link').href=u;$('#claude-note').textContent=d.note||(d.link?'Apre la tua chat salvata su claude.ai.':'Si apre una chat nuova su claude.ai con il tuo account.')}
+function renderPM(){renderClaude();
   const d=S.data.app_esterne['pizza-maker'];const panel=$('#pm-panel');
   if(!d){panel.hidden=true;return}panel.hidden=false;const u=safeUrl(d.link);
   const wasOpen=!!($('#pm-body .pm')||{}).open;
