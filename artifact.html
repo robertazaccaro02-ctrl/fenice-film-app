@@ -369,10 +369,6 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
 <section class="view" id="v-documenti" hidden>
   <div class="phead"><div><span class="label">Archivio</span><h2>Documenti</h2></div></div>
   <div class="panel" style="border-color:var(--oro)"><span class="label">Archivio file</span><p style="font-family:var(--f-display);font-size:1.5rem;font-weight:700;line-height:1.15">Tutti i file di Fenice Film sono su MyAirBridge</p><div><a class="btn primary" href="https://www.myairbridge.com/it/#!/" target="_blank" rel="noopener">Apri MyAirBridge ›</a></div></div>
-  <div class="panel" id="claude-panel" data-admin>
-    <div class="phead"><span class="label">Chat con Claude</span><button class="btn small" data-edit="app_esterne" data-id="claude-chat">Cambia link</button></div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><a class="btn primary" id="claude-link" href="https://claude.ai/new" target="_blank" rel="noopener">Apri la chat con Claude ›</a><small class="muted" id="claude-note">Si apre claude.ai con il tuo account.</small></div>
-  </div>
   <div class="panel" data-admin><span class="label">Proposte · solo titolari</span><p style="font-family:var(--f-display);font-size:1.3rem;font-weight:700;line-height:1.15">Proposte Fenice Film</p><p class="muted" style="font-size:.85rem;max-width:62ch">La proposta di partnership per sponsor e brand: scrivi partner e programma, modifica testi e foto, scarica il PDF.</p><div><a class="btn primary" href="https://claude.ai/artifact/9u2gJ5Xaq2rYnfGzCc2TW1" target="_blank" rel="noopener" data-proposta="partnership">Apri le proposte ›</a></div></div>
   <div class="phead"><span class="label">Link utili (facoltativo)</span><button class="btn small" data-new="documenti" data-admin>+ Aggiungi link</button></div>
   <p class="muted" style="max-width:62ch;font-size:.85rem">Se serve, qui puoi salvare il link diretto a un file con la sua scadenza. Non è obbligatorio.</p>
@@ -486,8 +482,7 @@ const absOn=(all,k)=>all.filter(x=>x.sk<=k&&x.ek>=k);
 const shortD=k=>keyToDate(k).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'});
 const range=x=>x.sk===x.ek?shortD(x.sk):`${shortD(x.sk)} → ${shortD(x.ek)}`;
 const initials=n=>String(n||'').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
-function renderClaude(){const d=S.data.app_esterne['claude-chat']||{};const u=safeUrl(d.link)||'https://claude.ai/new';$('#claude-link').href=u;$('#claude-note').textContent=d.note||(d.link?'Apre la tua chat salvata su claude.ai.':'Si apre una chat nuova su claude.ai con il tuo account.')}
-function renderPM(){renderClaude();
+function renderPM(){
   const d=S.data.app_esterne['pizza-maker'];const panel=$('#pm-panel');
   if(!d){panel.hidden=true;return}panel.hidden=false;const u=safeUrl(d.link);
   const wasOpen=!!($('#pm-body .pm')||{}).open;
