@@ -234,5 +234,33 @@
     }
    }
   ]
+ },
+ {
+  "id": "2026-11-23-social-ginvalle",
+  "ops": [
+   {
+    "op": "set",
+    "collection": "produzioni",
+    "docId": "social-ginvalle",
+    "data": {
+     "nome": "Social Ginvalle",
+     "tipo": "Gestione social",
+     "stato": "In lavorazione",
+     "date": "",
+     "luogo": "",
+     "referente": "Brenda Rinaldi",
+     "app": "",
+     "note": "Gestione dei social di Ginvalle: progettiamo, registriamo e curiamo i contenuti."
+    }
+   },
+   {
+    "op": "update",
+    "collection": "collaboratori",
+    "docId": "brenda",
+    "data": {
+     "produzioni": "Samsung – live · Social Ginvalle"
+    }
+   }
+  ]
  }
 ]

@@ -513,7 +513,7 @@ const catOfTodo=r=>r.categoria||r.area||'Senza categoria';const progOfTodo=r=>r.
 /* Schema delle raccolte: campi del modulo e come mostrarli */
 const COLL={
   produzioni:{label:'produzione',fields:[
-    {k:'nome',l:'Titolo',req:1},{k:'tipo',l:'Tipo',opts:['Programma TV','Branded content','Evento','Social','Documentario','Altro']},
+    {k:'nome',l:'Titolo',req:1},{k:'tipo',l:'Tipo',opts:['Programma TV','Documentario','Branded content','Gestione social','Evento','Social','Altro']},
     {k:'stato',l:'Stato',opts:['In sviluppo','In preparazione','In lavorazione','In montaggio','Consegnata']},
     {k:'date',l:'Date principali',ph:'es. Casting 28–29 novembre'},{k:'luogo',l:'Luogo'},
     {k:'referente',l:'Referente interno'},{k:'app',l:'Link app o cartella',t:'url',ph:'https://…'},{k:'note',l:'Note',t:'area'}]},
