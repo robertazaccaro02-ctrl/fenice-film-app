@@ -149,7 +149,8 @@ button.card:hover{border-color:var(--oro)}
 .tt small.late{color:var(--bad);font-weight:700}
 .x{border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:6px}
 .addrow{display:grid;grid-template-columns:1fr auto;gap:8px}
-.addrow .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.addrow .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.addrow .two>*{min-width:0;width:100%;box-sizing:border-box}
+.whof{font:inherit;font-size:.85rem;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
 .pgroup{display:grid;gap:4px}.pgroup>h3{margin:0;font-size:1.05rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pgroup>h3 small{font-size:.78rem;color:var(--muted);font-weight:600}
 .cgroup{border-left:3px solid var(--oro);padding-left:10px;margin-top:6px}.cgroup>.label{display:block;margin-bottom:2px}
 .tt .ptag{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.02em;color:var(--gold-text);background:rgba(185,143,62,.14);border-radius:5px;padding:1px 5px;margin-right:5px;vertical-align:1px}
@@ -242,12 +243,13 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
     </div>
     <div class="panel">
       <div class="phead"><span class="label">Da fare · tutto insieme</span><span style="display:flex;gap:10px;align-items:baseline"><span class="muted num" id="todo-count" style="font-size:.8rem"></span><a href="#dafare" class="muted" style="font-size:.8rem">Per programma ›</a></span></div>
+      <select class="whof" id="who-home" aria-label="Di chi" style="margin-bottom:6px"></select>
       <ul class="todo" id="todo-list"></ul>
       <form class="addrow" id="todo-form" autocomplete="off" hidden>
         <div style="display:grid;gap:8px;min-width:0">
           <input type="text" id="todo-text" placeholder="Nuova cosa da fare…" aria-label="Cosa da fare" maxlength="200">
           <div class="two"><select id="todo-prog" aria-label="Programma"></select><select id="todo-area" aria-label="Categoria"></select></div>
-          <input type="date" id="todo-date" aria-label="Scadenza">
+          <div class="two"><select id="todo-chi" aria-label="Chi lo fa"></select><input type="date" id="todo-date" aria-label="Scadenza"></div>
         </div>
         <button class="btn primary" type="submit">Aggiungi</button>
       </form>
@@ -313,7 +315,8 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
     <form class="addrow" id="pd-form" autocomplete="off" hidden>
       <div style="display:grid;gap:8px;min-width:0">
         <input type="text" id="pd-text" placeholder="Cosa c'è da fare…" aria-label="Cosa da fare" maxlength="200">
-        <div class="two"><select id="pd-cat" aria-label="Categoria"></select><input type="date" id="pd-date" aria-label="Scadenza"></div>
+        <div class="two"><select id="pd-cat" aria-label="Categoria"></select><select id="pd-chi" aria-label="Chi lo fa"></select></div>
+        <input type="date" id="pd-date" aria-label="Scadenza">
       </div>
       <button class="btn primary" type="submit">Aggiungi</button>
     </form>
@@ -341,11 +344,12 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
       <div style="display:grid;gap:8px;min-width:0">
         <input type="text" id="df-text" placeholder="Cosa devo fare…" aria-label="Cosa da fare" maxlength="200">
         <div class="two"><select id="df-prog" aria-label="Programma"></select><select id="df-cat" aria-label="Categoria"></select></div>
-        <input type="date" id="df-date" aria-label="Scadenza">
+        <div class="two"><select id="df-chi" aria-label="Chi lo fa"></select><input type="date" id="df-date" aria-label="Scadenza"></div>
       </div>
       <button class="btn primary" type="submit">Aggiungi</button>
     </form>
   </div>
+  <select class="whof" id="who-df" aria-label="Di chi"></select>
   <div class="chips" id="f-dafare"></div>
   <div id="dafare-list" style="display:grid;gap:16px"></div>
 </section>
@@ -528,7 +532,7 @@ const COLL={
   fornitori:{label:'fornitore',fields:[
     {k:'nome',l:'Nome',req:1},{k:'categoria',l:'Categoria',opts:['Catering','Alloggi','Trasporti','Noleggio attrezzatura','Scenografia e props','Location','Altro']},
     {k:'referente',l:'Referente'},{k:'telefono',l:'Telefono',t:'tel'},{k:'email',l:'Email',t:'email'},{k:'citta',l:'Città'},{k:'note',l:'Note e preventivi',t:'area'}]},
-  todo:{label:'cosa da fare',fields:[{k:'testo',l:'Cosa',req:1},{k:'programma',l:'Programma',opts:[]},{k:'categoria',l:'Categoria',opts:[]},{k:'scadenza',l:'Entro il',t:'date'}]},
+  todo:{label:'cosa da fare',fields:[{k:'testo',l:'Cosa',req:1},{k:'programma',l:'Programma',opts:[]},{k:'categoria',l:'Categoria',opts:[]},{k:'chi',l:'Chi lo fa',opts:[]},{k:'scadenza',l:'Entro il',t:'date'}]},
   app_esterne:{label:'app',fields:[{k:'nome',l:'Nome',req:1},{k:'link',l:'Link per scaricarla',t:'url',ph:'https://…'},{k:'password',l:'Password'},{k:'note',l:'Note',t:'area'}]},
   assenze:{label:'assenza',fields:[
     {k:'persona',l:'Chi',req:1,list:'people',ph:'Nome'},{k:'motivo',l:'Motivo',opts:['Ferie','Fuori sede','Malattia','Permesso','Altro']},
@@ -755,16 +759,22 @@ function renderDocs(){
 
 function todoSort(a,b){return(a.fatto-b.fatto)||String(a.scadenza||'9').localeCompare(String(b.scadenza||'9'))||String(a.creato).localeCompare(String(b.creato))}
 function todoLi(r,withProg,withCat=withProg){const t=todayKey();const late=!r.fatto&&r.scadenza&&r.scadenza<t;
-  const sub=[withCat?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
+  const sub=[r.chi?'👤 '+r.chi:'',withCat?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
   const tag=withProg&&r.programma&&r.programma!==GENERALE?`<span class="ptag">${esc(r.programma)}</span>`:'';
   return`<li class="${r.fatto?'done':''}"><button class="tick" data-tick="${esc(r._id)}" aria-label="${r.fatto?'Segna da fare':'Segna fatto'}" aria-pressed="${!!r.fatto}" ${S.canWrite?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></button>
     <span class="tt">${tag}${S.canWrite?`<button class="tedit" data-edit="todo" data-id="${esc(r._id)}" aria-label="Modifica">${esc(r.testo)}</button>`:esc(r.testo)}${sub||late?`<small class="${late?'late':''}">${late?'In ritardo'+(sub?' · ':''):''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}
+function persone(){const all=rows('collaboratori').sort((a,b)=>(grp(a)==='Interno'?0:1)-(grp(b)==='Interno'?0:1)||(a.ordine??99)-(b.ordine??99)||sortByName(a,b)).map(r=>r.nome).filter(Boolean);return[...new Set(['Roberta Zaccaro',...all])]}
+function getWho(){try{return localStorage.getItem('ff-who')||''}catch(e){return''}}
+function setWho(v){try{localStorage.setItem('ff-who',v)}catch(e){}S.who=v}
+const whoOk=r=>!S.who||r.chi===S.who||r.chi==='Tutti';
 function fillTodoSelects(){const P=programmi();
+  ['#who-home','#who-df'].forEach(sel=>{const el=$(sel);if(!el)return;if(S.who==null)S.who=getWho();el.innerHTML='<option value="">Le cose di tutti</option>'+persone().map(p=>`<option value="${esc(p)}">Solo di ${esc(p)}</option>`).join('');el.value=S.who;if(el.value!==S.who)el.value=''});
+  const PP=persone();['#todo-chi','#df-chi','#pd-chi'].forEach(sel=>{const el=$(sel);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Chi lo fa…</option><option>Tutti</option>'+PP.map(p=>`<option>${esc(p)}</option>`).join('');el.value=cur&&[...el.options].some(o=>o.value===cur)?cur:''});
   [['#todo-prog','#df-prog']].flat().forEach(sel=>{const el=$(sel);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Programma…</option>'+P.map(p=>`<option>${esc(p)}</option>`).join('');el.value=P.includes(cur)?cur:''});
   ['#todo-area','#df-cat'].forEach(sel=>{const el=$(sel);if(!el||el.options.length)return;el.innerHTML='<option value="">Categoria…</option>'+CATEGORIE.map(a=>`<option>${esc(a)}</option>`).join('')})}
 function renderTodo(){
   fillTodoSelects();
-  const all=rows('todo').sort(todoSort);
+  const all=rows('todo').filter(whoOk).sort(todoSort);
   const open=all.filter(r=>!r.fatto).length;
   $('#todo-count').textContent=S.ready.todo?`${open} aperte`:'';
   const td=$('#t-dafare');if(td)td.textContent=S.ready.todo?open:'–';
@@ -797,7 +807,7 @@ function renderAll(){applyRole();renderAway();renderPM();renderProd();renderRub(
 let editing=null;
 function openSheet(c,id){
   if(!(S.admin||((c==='assenze'||c==='todo')&&S.canWrite)))return;
-  if(c==='todo'){COLL.todo.fields[1].opts=programmi();COLL.todo.fields[2].opts=CATEGORIE}
+  if(c==='todo'){COLL.todo.fields[1].opts=programmi();COLL.todo.fields[2].opts=CATEGORIE;COLL.todo.fields[3].opts=['Tutti',...persone()];const cur=id&&S.data.todo[id]&&S.data.todo[id].chi;if(cur&&!COLL.todo.fields[3].opts.includes(cur))COLL.todo.fields[3].opts.push(cur)}
   const base=c==='riservati'?'documenti':c;const cfg=COLL[base];
   const d=id?Object.assign({},S.data[c][id]):{};
   if(c==='todo'&&id){if(!d.categoria&&d.area)d.categoria=d.area;if(d.programma&&!COLL.todo.fields[1].opts.includes(d.programma))COLL.todo.fields[1].opts.push(d.programma)}
@@ -854,6 +864,7 @@ function route(){
   if(view==='calendario')renderCal();if(view==='prod')renderProdDetail();
   window.scrollTo(0,0)}
 addEventListener('hashchange',route);
+document.addEventListener('change',e=>{if(e.target.classList&&e.target.classList.contains('whof')){setWho(e.target.value);renderTodo()}});
 document.addEventListener('keydown',e=>{const go=e.target.closest&&e.target.closest('[data-go]');if(go&&(e.key==='Enter'||e.key===' ')){e.preventDefault();location.hash=go.dataset.go}});
 
 document.addEventListener('click',async e=>{
@@ -879,10 +890,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#scrim').hidden
 document.addEventListener('submit',async e=>{
   if(e.target.id==='sh-form'){e.preventDefault();saveSheet();return}
   if(e.target.id==='pd-form'){e.preventDefault();const d=S.data.produzioni[S.prodId];const testo=$('#pd-text').value.trim();if(!testo||!S.db||!d)return;
-    try{await S.db.collection('todo').add({testo,scadenza:$('#pd-date').value||'',programma:d.nome,categoria:$('#pd-cat').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});$('#pd-text').value='';$('#pd-date').value='';toast('Aggiunta')}catch(err){showErr(err)}return}
-  if(e.target.id==='todo-form'||e.target.id==='df-form'){e.preventDefault();const h=e.target.id==='todo-form';const q=x=>$(h?{t:'#todo-text',d:'#todo-date',p:'#todo-prog',c:'#todo-area'}[x]:{t:'#df-text',d:'#df-date',p:'#df-prog',c:'#df-cat'}[x]);
+    try{await S.db.collection('todo').add({testo,scadenza:$('#pd-date').value||'',programma:d.nome,categoria:$('#pd-cat').value||'',chi:$('#pd-chi').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});$('#pd-text').value='';$('#pd-date').value='';toast('Aggiunta')}catch(err){showErr(err)}return}
+  if(e.target.id==='todo-form'||e.target.id==='df-form'){e.preventDefault();const h=e.target.id==='todo-form';const q=x=>$(h?{t:'#todo-text',d:'#todo-date',p:'#todo-prog',c:'#todo-area',w:'#todo-chi'}[x]:{t:'#df-text',d:'#df-date',p:'#df-prog',c:'#df-cat',w:'#df-chi'}[x]);
     const testo=q('t').value.trim();if(!testo||!S.db)return;
-    try{await S.db.collection('todo').add({testo,scadenza:q('d').value||'',programma:q('p').value||'',categoria:q('c').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});q('t').value='';q('d').value='';toast('Aggiunta')}catch(err){showErr(err)}}
+    try{await S.db.collection('todo').add({testo,scadenza:q('d').value||'',programma:q('p').value||'',categoria:q('c').value||'',chi:q('w').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});q('t').value='';q('d').value='';toast('Aggiunta')}catch(err){showErr(err)}}
 });
 $('#rub-q').addEventListener('input',e=>{S.q=e.target.value;renderRub()});
 fillTodoSelects();
