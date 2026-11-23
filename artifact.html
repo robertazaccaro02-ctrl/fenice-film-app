@@ -308,6 +308,22 @@ footer{font-size:.75rem;color:var(--muted);padding-top:8px}
   <div class="cards" id="l-produzioni"></div>
 </section>
 
+<section class="view" id="v-prod" hidden>
+  <div><a href="#produzioni" class="muted" style="font-size:.85rem;text-decoration:none">‹ Tutte le produzioni</a></div>
+  <div id="pd-head"></div>
+  <div class="panel">
+    <div class="phead"><span class="label">Da fare per questa produzione</span><a href="#dafare" class="muted" style="font-size:.8rem">Tutte ›</a></div>
+    <div id="pd-todo"></div>
+    <form class="addrow" id="pd-form" autocomplete="off" hidden>
+      <div style="display:grid;gap:8px;min-width:0">
+        <input type="text" id="pd-text" placeholder="Cosa c'è da fare…" aria-label="Cosa da fare" maxlength="200">
+        <div class="two"><select id="pd-cat" aria-label="Categoria"></select><input type="date" id="pd-date" aria-label="Scadenza"></div>
+      </div>
+      <button class="btn primary" type="submit">Aggiungi</button>
+    </form>
+  </div>
+</section>
+
 <!-- RUBRICA: clienti / collaboratori / fornitori -->
 <section class="view" id="v-rubrica" hidden>
   <div><span class="label">Rubrica</span><h2 id="rub-title">Collaboratori</h2></div>
@@ -567,9 +583,18 @@ function card(c,d,inner){const tagName=S.admin?'button':'div';return`<${tagName}
 function loadingOr(c,html,emptyMsg){if(S.failed)return`<div class="empty"><b>Dati non disponibili</b><span>Apri l'app da claude.ai con il tuo account per vedere e modificare i dati.</span></div>`;
   if(!S.ready[c])return'<p class="status">Carico…</p>';return html||`<div class="empty">${emptyMsg}</div>`}
 
-function prodCard(d){return card('produzioni',d,`<div class="tags"><span class="tag ${STATO_CLS[d.stato]||''}">${esc(d.stato||'—')}</span>${d.tipo?`<span class="tag">${esc(d.tipo)}</span>`:''}</div>
+function prodCard(d){const op=rows('todo').filter(r=>!r.fatto&&progOfTodo(r).toLowerCase()===String(d.nome||'').toLowerCase()).length;return`<div class="card" role="link" tabindex="0" data-go="#prod/${encodeURIComponent(d._id)}" style="cursor:pointer;position:relative;padding-right:40px"><span class="editmark" aria-hidden="true" style="font-size:1.1rem">›</span>`+(`<div class="tags"><span class="tag ${STATO_CLS[d.stato]||''}">${esc(d.stato||'—')}</span>${d.tipo?`<span class="tag">${esc(d.tipo)}</span>`:''}</div>
   <span class="cname">${esc(d.nome)}</span>${d.date?`<span class="cmeta">${esc(d.date)}${d.luogo?' · '+esc(d.luogo):''}</span>`:d.luogo?`<span class="cmeta">${esc(d.luogo)}</span>`:''}
-  ${d.note?`<span class="cline muted">${esc(d.note)}</span>`:''}${safeUrl(d.app)?`<a class="btn small" href="${esc(d.app)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apri ›</a>`:''}`)}
+  ${d.note?`<span class="cline muted">${esc(d.note)}</span>`:''}${safeUrl(d.app)?`<a class="btn small" href="${esc(d.app)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apri app ›</a>`:''}${op?`<span class="tag gold">${op} da fare</span>`:''}`)+'</div>'}
+function renderProdDetail(){const id=S.prodId;const d=id&&S.data.produzioni[id];const head=$('#pd-head');
+  if(!d){head.innerHTML=S.ready.produzioni?'<div class="empty"><b>Produzione non trovata</b><span>Forse è stata eliminata.</span></div>':'<p class="status">Carico…</p>';$('#pd-todo').innerHTML='';return}
+  const row=(l,v)=>v?`<dt>${l}</dt><dd>${v}</dd>`:'';const u=safeUrl(d.app);
+  head.innerHTML=`<div class="phead"><div><div class="tags"><span class="tag ${STATO_CLS[d.stato]||''}">${esc(d.stato||'Stato da indicare')}</span>${d.tipo?`<span class="tag">${esc(d.tipo)}</span>`:''}</div><h2 style="margin-top:6px">${esc(d.nome)}</h2></div>${S.admin?`<button class="btn" data-edit="produzioni" data-id="${esc(id)}">✎ Modifica</button>`:''}</div>
+   <div class="panel"><dl class="kv">${row('Date',esc(d.date||''))}${row('Luogo',esc(d.luogo||''))}${row('Referente',esc(d.referente||''))}${row('App / cartella',u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//,'').slice(0,40))} ›</a>`:'')}${row('Note',d.note?`<span style="white-space:pre-line">${esc(d.note)}</span>`:'')}</dl>${!d.date&&!d.luogo&&!d.note?`<p class="muted" style="margin:0">Nessuna informazione ancora.${S.admin?' Premi Modifica per aggiungerle.':''}</p>`:''}</div>`;
+  const nm=String(d.nome||'').toLowerCase();const items=rows('todo').filter(r=>progOfTodo(r).toLowerCase()===nm).sort(todoSort);
+  const shown=[...items.filter(r=>!r.fatto),...items.filter(r=>r.fatto).slice(0,5)];
+  $('#pd-todo').innerHTML=shown.length?`<ul class="todo">${shown.map(r=>todoLi(r,false,true)).join('')}</ul>`:'<p class="muted" style="margin:0 0 6px">Niente da fare per ora.</p>';
+  $('#pd-form').hidden=!S.canWrite;const pc=$('#pd-cat');if(!pc.options.length)pc.innerHTML='<option value="">Categoria…</option>'+CATEGORIE.map(a=>`<option>${esc(a)}</option>`).join('')}
 function renderProd(){
   const all=rows('produzioni').sort((a,b)=>(a.ordine??99)-(b.ordine??99)||sortByName(a,b));
   const stati=COLL.produzioni.fields.find(f=>f.k==='stato').opts;
@@ -624,8 +649,8 @@ function renderDocs(){
   $('#l-riservati').innerHTML=loadingOr('riservati',ris.map(d=>docCard('riservati',d)).join(''),'<span>Nessun documento riservato. Scegli “Solo titolari” quando aggiungi un contratto o un preventivo.</span>')}
 
 function todoSort(a,b){return(a.fatto-b.fatto)||String(a.scadenza||'9').localeCompare(String(b.scadenza||'9'))||String(a.creato).localeCompare(String(b.creato))}
-function todoLi(r,withProg){const t=todayKey();const late=!r.fatto&&r.scadenza&&r.scadenza<t;
-  const sub=[withProg?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
+function todoLi(r,withProg,withCat=withProg){const t=todayKey();const late=!r.fatto&&r.scadenza&&r.scadenza<t;
+  const sub=[withCat?catOfTodo(r):'',r.scadenza&&('entro '+keyToDate(r.scadenza).toLocaleDateString('it-IT',{day:'numeric',month:'short',timeZone:'UTC'}))].filter(x=>x&&x!=='Senza categoria').join(' · ');
   const tag=withProg&&r.programma&&r.programma!==GENERALE?`<span class="ptag">${esc(r.programma)}</span>`:'';
   return`<li class="${r.fatto?'done':''}"><button class="tick" data-tick="${esc(r._id)}" aria-label="${r.fatto?'Segna da fare':'Segna fatto'}" aria-pressed="${!!r.fatto}" ${S.canWrite?'':'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></button>
     <span class="tt">${tag}${S.canWrite?`<button class="tedit" data-edit="todo" data-id="${esc(r._id)}" aria-label="Modifica">${esc(r.testo)}</button>`:esc(r.testo)}${sub||late?`<small class="${late?'late':''}">${late?'In ritardo'+(sub?' · ':''):''}${esc(sub)}</small>`:''}</span>${S.canWrite?`<button class="x" data-deltodo="${esc(r._id)}" aria-label="Elimina">×</button>`:'<span></span>'}</li>`}
@@ -658,10 +683,10 @@ function renderCounts(){
 
 function applyRole(){
   document.querySelectorAll('[data-admin]').forEach(el=>el.hidden=!S.admin);
-  $('#todo-form').hidden=!S.canWrite;$('#df-form').hidden=!S.canWrite;
+  $('#todo-form').hidden=!S.canWrite;$('#df-form').hidden=!S.canWrite;$('#pd-form').hidden=!S.canWrite;
   const w=$('#who');if(S.user){w.hidden=false;w.textContent=S.admin?'Titolare':'Collaboratore'}
   $('#foot').textContent=S.admin?'Vedi tutto come titolare: clienti, tariffe e documenti riservati sono visibili solo a te e al tuo socio.':'Alcune sezioni (clienti, tariffe, documenti riservati) sono visibili solo ai titolari.'}
-function renderAll(){applyRole();renderAway();renderPM();renderProd();renderRub();renderDocs();renderTodo();renderCounts();renderHomeCal()}
+function renderAll(){applyRole();renderAway();renderPM();renderProd();renderRub();renderDocs();renderTodo();renderCounts();renderHomeCal();if(S.route==='prod')renderProdDetail()}
 
 /* ---------- foglio di modifica ---------- */
 let editing=null;
@@ -713,19 +738,21 @@ async function delSheet(btn){
 const COLLPATH={produzioni:'produzioni',clienti:'clienti',collaboratori:'collaboratori',fornitori:'fornitori',documenti:'documenti',riservati:'documenti_riservati',tariffe:'tariffe',todo:'todo',assenze:'assenze',app_esterne:'app_esterne'};
 
 /* ---------- navigazione ---------- */
-const ROUTES={home:'home',dafare:'dafare',proposte:'proposte',calendario:'calendario',produzioni:'produzioni',clienti:'rubrica',collaboratori:'rubrica',fornitori:'rubrica',documenti:'documenti'};
+const ROUTES={prod:'prod',home:'home',dafare:'dafare',proposte:'proposte',calendario:'calendario',produzioni:'produzioni',clienti:'rubrica',collaboratori:'rubrica',fornitori:'rubrica',documenti:'documenti'};
 function route(){
-  let h=(location.hash||'#home').slice(1);if(!ROUTES[h])h='home';
+  let h=(location.hash||'#home').slice(1);if(h.startsWith('prod/')){S.prodId=decodeURIComponent(h.slice(5));h='prod'}else if(!ROUTES[h])h='home';
   if(h==='clienti'&&S.userKnown&&!S.admin)h='collaboratori';
   if(h==='proposte'&&S.userKnown&&!S.admin)h='home';
   S.route=h;const view=ROUTES[h];if(view==='rubrica'){S.rub=h;renderRub()}
   document.querySelectorAll('section.view').forEach(s=>s.hidden=s.id!=='v-'+view);
-  document.querySelectorAll('.tabbar a').forEach(a=>a.setAttribute('aria-current',a.dataset.tab===view?'page':'false'));
-  if(view==='calendario')renderCal();
+  document.querySelectorAll('.tabbar a').forEach(a=>a.setAttribute('aria-current',a.dataset.tab===(view==='prod'?'produzioni':view)?'page':'false'));
+  if(view==='calendario')renderCal();if(view==='prod')renderProdDetail();
   window.scrollTo(0,0)}
 addEventListener('hashchange',route);
+document.addEventListener('keydown',e=>{const go=e.target.closest&&e.target.closest('[data-go]');if(go&&(e.key==='Enter'||e.key===' ')){e.preventDefault();location.hash=go.dataset.go}});
 
 document.addEventListener('click',async e=>{
+  const go=e.target.closest('[data-go]');if(go&&!e.target.closest('a,button')){location.hash=go.dataset.go;return}
   const t=e.target.closest('[data-chip],[data-edit],[data-new],[data-tick],[data-deltodo],[data-day],[data-cal-allow],#cal-prev,#cal-next,#cal-today,#rub-new,#sh-cancel,#sh-del');
   if(!t){if(e.target.id==='scrim')closeSheet();return}
   if(t.dataset.chip){const k=t.dataset.chip;S.chip[k]=S.chip[k]===t.dataset.val?'':t.dataset.val;k==='produzioni'?renderProd():k==='documenti'?renderDocs():k==='dafare'?renderTodo():renderRub();return}
@@ -746,6 +773,8 @@ document.addEventListener('click',async e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#scrim').hidden)closeSheet()});
 document.addEventListener('submit',async e=>{
   if(e.target.id==='sh-form'){e.preventDefault();saveSheet();return}
+  if(e.target.id==='pd-form'){e.preventDefault();const d=S.data.produzioni[S.prodId];const testo=$('#pd-text').value.trim();if(!testo||!S.db||!d)return;
+    try{await S.db.collection('todo').add({testo,scadenza:$('#pd-date').value||'',programma:d.nome,categoria:$('#pd-cat').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});$('#pd-text').value='';$('#pd-date').value='';toast('Aggiunta')}catch(err){showErr(err)}return}
   if(e.target.id==='todo-form'||e.target.id==='df-form'){e.preventDefault();const h=e.target.id==='todo-form';const q=x=>$(h?{t:'#todo-text',d:'#todo-date',p:'#todo-prog',c:'#todo-area'}[x]:{t:'#df-text',d:'#df-date',p:'#df-prog',c:'#df-cat'}[x]);
     const testo=q('t').value.trim();if(!testo||!S.db)return;
     try{await S.db.collection('todo').add({testo,scadenza:q('d').value||'',programma:q('p').value||'',categoria:q('c').value||'',fatto:false,by:S.me||'',creato:new Date().toISOString()});q('t').value='';q('d').value='';toast('Aggiunta')}catch(err){showErr(err)}}
